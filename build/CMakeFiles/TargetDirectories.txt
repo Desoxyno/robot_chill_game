@@ -1,3 +1,0 @@
-/home/Edgar/Documents/game/build/CMakeFiles/game.dir
-/home/Edgar/Documents/game/build/CMakeFiles/edit_cache.dir
-/home/Edgar/Documents/game/build/CMakeFiles/rebuild_cache.dir
