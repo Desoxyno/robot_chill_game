@@ -2,15 +2,15 @@
 
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;
-in vec3 vertexNormal;
 
 in mat4 instanceTransform;
 
 uniform mat4 mvp;
 uniform float windTime;
+uniform vec3 cameraPosition;
 
 out vec2 fragTexCoord;
-out vec3 fragNormal;
+out float fragDistance;
 
 void main()
 {
@@ -35,14 +35,14 @@ void main()
     localPos.x += movement * 0.12 * height * height;
     localPos.z += movement * 0.03 * height * height;
 
-    vec4 worldPos =
+    vec4 worldPosition =
         instanceTransform * vec4(localPos, 1.0);
 
     fragTexCoord = vertexTexCoord;
 
-    fragNormal =
-        mat3(instanceTransform) * vertexNormal;
+    fragDistance =
+        distance(worldPosition.xyz, cameraPosition);
 
     gl_Position =
-        mvp * worldPos;
+        mvp * worldPosition;
 }

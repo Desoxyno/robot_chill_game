@@ -37,12 +37,16 @@ class Scene {
             scene_objects.push_back(std::move(to_add));
         }
 
-        void Draw() {
+        void Draw(Model &skybox) {
             BeginDrawing();
 
             BeginMode3D(player->camera.camera);
 
-            DrawGrid(100, 0.5f);
+            rlDisableBackfaceCulling();
+
+            DrawModel(skybox, player->camera.camera.position, 1.0f, WHITE);
+
+            rlEnableBackfaceCulling();
 
             player->Draw();
             terrain->Draw(player->camera.camera);

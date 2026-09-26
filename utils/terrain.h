@@ -52,9 +52,7 @@ struct Chunk
 {
     BoundingBox box = {};
 
-    std::vector<Matrix> transforms_LOD0;
-    std::vector<Matrix> transforms_LOD1;
-    std::vector<Matrix> transforms_LOD2;
+    std::vector<Matrix> transforms;
 
     bool visible = false;
 
@@ -74,7 +72,7 @@ public:
 
     float width = 5000.0f;
 
-    int chunkSize = 25;
+    int chunkSize = 50;
 
     int chunkX = ceil(width / chunkSize);
 
@@ -85,13 +83,15 @@ public:
 
     Model grass_model_far;
 
+    Model grass_model_very_far;
+
     Material grass_material = LoadMaterialDefault();
 
     Shader instancing_shader;
 
     int windTimeLoc = -1;
 
-    int grass_n = 7000000;
+    int grass_n = 15'000'000;
 
     int current_LOD = 0;
 
@@ -104,6 +104,9 @@ public:
 
         grass_model_far =
             LoadModel("assets/grass_LOD1.glb");
+
+        grass_model_very_far =
+            LoadModel("assets/grass_LOD2.glb");
 
 
         instancing_shader =
@@ -229,34 +232,11 @@ public:
                 );
 
 
-            int index =
-                chunkZc * chunkX + chunkXc;
+            int index = chunkZc * chunkX + chunkXc;
 
+            Matrix grass_matrix = new_grass.getMatrix();
 
-            Matrix grass_matrix =
-                new_grass.getMatrix();
-
-
-            chunks[index]
-                .transforms_LOD0
-                .push_back(grass_matrix);
-
-
-            if (i % 2 == 0)
-            {
-                chunks[index]
-                    .transforms_LOD1
-                    .push_back(grass_matrix);
-            }
-
-
-            if (i % 4 == 0)
-            {
-                chunks[index]
-                    .transforms_LOD2
-                    .push_back(grass_matrix);
-            }
-        }
+            chunks[index].transforms.push_back(grass_matrix);}
     }
 
 
@@ -316,7 +296,7 @@ public:
                 (chunk.box.min.z + chunk.box.max.z) / 2;
 
 
-            double distance =
+            float distance =
                 (camera.position.x - centreX)
                 * (camera.position.x - centreX)
 
@@ -331,21 +311,26 @@ public:
                 * (camera.position.z - centreZ);
 
 
-            if (distance < 90 * 90)
+            if (distance < 100 * 100)
             {
                 chunk.current_LOD = 0;
             }
 
 
-            if (distance >= 90 * 90)
+            if (distance >= 100 * 100)
             {
                 chunk.current_LOD = 1;
             }
 
 
-            if (distance >= 240 * 240)
+            if (distance >= 300 * 300)
             {
                 chunk.current_LOD = 2;
+            }
+
+            if (distance >= 500 * 500)
+            {
+                chunk.current_LOD = 3;
             }
 
 
@@ -356,9 +341,9 @@ public:
                     DrawMeshInstanced(
                         grass_model_near.meshes[0],
                         grass_material,
-                        chunk.transforms_LOD0.data(),
+                        chunk.transforms.data(),
                         static_cast<int>(
-                            chunk.transforms_LOD0.size()
+                            chunk.transforms.size()
                         )
                     );
 
@@ -370,9 +355,9 @@ public:
                     DrawMeshInstanced(
                         grass_model_far.meshes[0],
                         grass_material,
-                        chunk.transforms_LOD1.data(),
+                        chunk.transforms.data(),
                         static_cast<int>(
-                            chunk.transforms_LOD1.size()
+                            chunk.transforms.size()
                         )
                     );
 
@@ -382,14 +367,16 @@ public:
                 case 2:
 
                     DrawMeshInstanced(
-                        grass_model_far.meshes[0],
+                        grass_model_very_far.meshes[0],
                         grass_material,
-                        chunk.transforms_LOD2.data(),
+                        chunk.transforms.data(),
                         static_cast<int>(
-                            chunk.transforms_LOD2.size()
+                            chunk.transforms.size()
                         )
                     );
+                    break;
 
+                case 3:
                     break;
             }
         }

@@ -14,17 +14,30 @@ int main() {
 
     Scene test_map = Scene(std::move(player), std::move(test_terrain));
 
+    Shader cloud_shader = LoadShader("shaders/skybox.vs", "shaders/skybox.fs");
+    int timeLoc = GetShaderLocation(cloud_shader, "uTime");
+
+    Mesh cube = GenMeshCube(5000.0f, 500.0f, 5000.0f);
+    Model skybox = LoadModelFromMesh(cube);
+    skybox.materials[0].shader = cloud_shader;
+
+    DisableCursor();
+
     while (!WindowShouldClose()) {
 
-        ClearBackground(RAYWHITE);
+        ClearBackground({29, 41, 81});
+
+        float time = GetTime();
+
+        SetShaderValue(
+            cloud_shader,
+            timeLoc,
+            &time,
+            SHADER_UNIFORM_FLOAT
+        );
 
         test_map.Update();
-
-
-            test_map.Draw();
-
-
-
+        test_map.Draw(skybox);
 
     }
 
