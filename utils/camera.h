@@ -7,7 +7,11 @@ class PlayerCam {
     public:
         Camera3D camera;
 
-        customMath::Vector3 offset = {-10, 10, 30};
+        customMath::Vector3 offset = {-10, 10, 0};
+
+        float distance = 5;
+        float yaw = 0;
+        float pitch = 0;
 
         PlayerCam() {
             camera.target = Vector3{0, 0, 0};
@@ -17,7 +21,9 @@ class PlayerCam {
         }
 
         void Update(customMath::Vector3 target_position) {
-            camera.position = to_raylib_vec( target_position + offset);
+            camera.position = raylib_vec( target_position + offset);
+
+            camera.target = raylib_vec(target_position);
 
         }
 };
