@@ -5,6 +5,7 @@
 #include "terrain.h"
 
 #include <memory>
+#include <raylib.h>
 #include <utility>
 #include <vector>
 
@@ -24,9 +25,12 @@ class Scene {
         void Update() {
 
             player->Update();
+            terrain->Update(player->camera.camera);
 
-            for (auto& object : scene_objects)
+            for (auto& object : scene_objects) {
                 object->Update();
+            }
+                
         }
 
         void AddObject(std::unique_ptr<GameObject> to_add) {
@@ -34,11 +38,24 @@ class Scene {
         }
 
         void Draw() {
+            BeginDrawing();
+
+            BeginMode3D(player->camera.camera);
+
+            DrawGrid(100, 0.5f);
 
             player->Draw();
-            terrain->Draw();
+            terrain->Draw(player->camera.camera);
 
-            for (auto& object : scene_objects)
+            for (auto& object : scene_objects) {
                 object->Draw();
+            }
+
+            EndMode3D();
+
+            DrawFPS(10, 10);
+
+            EndDrawing();
+                
         }
 };
