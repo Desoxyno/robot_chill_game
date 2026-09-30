@@ -1,40 +1,41 @@
 #include "raylib.h"
-#include "player.h"
-#include "scene.h"
+#include "player/player.h"
+#include "core/scene.h"
 #include <memory>
-#include "terrain.h"
+#include "world/terrain.h"
+#include "entities/robot.h"
+#include "utils/config.h"
 
 int main() {
 
     InitWindow(1280, 720, "Game");
-    Model player_model = (LoadModel("assets/bean.glb"));
+    SetConfigFlags( FLAG_MSAA_4X_HINT);
 
-    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {0, 2, 0}, 0));
+    Config conf = Config("config/config.cfg");
+
+    Model player_model = (LoadModel(conf.getRESpath("model_player").c_str()));
+    Texture2D sky = LoadTexture(conf.getRESpath("texture_stars").c_str());
+    Shader cloud_shader = LoadShader(conf.getRESpath("shader_skybox_vs").c_str(), conf.getRESpath("shader_skybox_fs").c_str());
+
+    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 0.35, 2500}, 0));
     std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>(Terrain({0, 0, 0}));
 
     Scene test_map = Scene(std::move(player), std::move(test_terrain));
 
-    Shader cloud_shader = LoadShader("shaders/skybox.vs", "shaders/skybox.fs");
-    int timeLoc = GetShaderLocation(cloud_shader, "uTime");
+    Mesh sphere = GenMeshSphere(100.0f, 100.0f, 100.0f);
+    Model skybox = LoadModelFromMesh(sphere);
+    Robot robot = Robot(test_map.terrain->width);
 
-    Mesh cube = GenMeshCube(5000.0f, 500.0f, 5000.0f);
-    Model skybox = LoadModelFromMesh(cube);
     skybox.materials[0].shader = cloud_shader;
+    skybox.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = sky;
 
-    DisableCursor();
+    test_map.AddObject(std::make_unique<Robot>(robot));
+
+    // DisableCursor();
 
     while (!WindowShouldClose()) {
 
-        ClearBackground({29, 41, 81});
-
-        float time = GetTime();
-
-        SetShaderValue(
-            cloud_shader,
-            timeLoc,
-            &time,
-            SHADER_UNIFORM_FLOAT
-        );
+        ClearBackground(WHITE);
 
         test_map.Update();
         test_map.Draw(skybox);

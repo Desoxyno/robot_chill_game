@@ -1,12 +1,14 @@
 #pragma once
 
-#include "constant.h"
+#include "utils/constant.h"
+#include "math/vectors.h"
 #include "raylib.h"
-#include "vectors.h"
+#include "math/vectors.h"
 #include <array>
 #include <cmath>
 #include <raymath.h>
 #include "rlgl.h"
+#include "utils/eco.h"
 
 struct Frustum {
     std::array<customMath::Vector4, 6> plan_array;
@@ -16,6 +18,20 @@ struct Frustum {
     }
 
 };
+
+inline bool IsBoxOutsidePlane(const EcoBoundingBox& box, const customMath::Vector4& plane) {
+    double x = plane.x >= 0 ? box.max.x : box.min.x;
+    double y = plane.y >= 0 ? box.max.y : box.min.y;
+    double z = plane.z >= 0 ? box.max.z : box.min.z;
+
+    double distance =
+        plane.x * x +
+        plane.y * y +
+        plane.z * z +
+        plane.w;
+
+    return distance < 0;
+}
 
 inline bool IsBoxOutsidePlane(const BoundingBox& box, const customMath::Vector4& plane) {
     double x = plane.x >= 0 ? box.max.x : box.min.x;
@@ -29,6 +45,17 @@ inline bool IsBoxOutsidePlane(const BoundingBox& box, const customMath::Vector4&
         plane.w;
 
     return distance < 0;
+}
+
+inline bool IsBoxOutsideFrustum(const EcoBoundingBox& box, const Frustum& frustum)
+{
+    for (const auto& plane : frustum.plan_array)
+    {
+        if (IsBoxOutsidePlane(box, plane))
+            return true;
+    }
+
+    return false;
 }
 
 inline bool IsBoxOutsideFrustum(const BoundingBox& box, const Frustum& frustum)

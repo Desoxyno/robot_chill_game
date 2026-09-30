@@ -1,7 +1,7 @@
 #pragma once
 
 #include <raylib.h>
-#include "vectors.h"
+#include "math/vectors.h"
 
 class GameObject {
 

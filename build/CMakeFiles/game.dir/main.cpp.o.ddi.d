@@ -1,8 +1,8 @@
 CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/include/stdc-predef.h /usr/include/raylib.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stdarg.h \
- /home/Edgar/Documents/game/player/player.h \
- /home/Edgar/Documents/game/player/camera.h \
+ /home/Edgar/Documents/game/includes/player/player.h \
+ /home/Edgar/Documents/game/includes/player/camera.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cmath \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/requires_hosted.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -83,12 +83,17 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/poly_hermite.tcc \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/poly_laguerre.tcc \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/riemann_zeta.tcc \
- /home/Edgar/Documents/game/utils/vectors.h \
- /home/Edgar/Documents/game/utils/constant.h \
- /home/Edgar/Documents/game/utils/gameobject.h \
- /home/Edgar/Documents/game/utils/scene.h \
- /home/Edgar/Documents/game/utils/terrain.h /usr/include/raymath.h \
+ /home/Edgar/Documents/game/includes/math/vectors.h \
+ /usr/include/raymath.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/math.h \
+ /home/Edgar/Documents/game/includes/utils/constant.h \
+ /home/Edgar/Documents/game/includes/core/models.h \
+ /home/Edgar/Documents/game/includes/core/scene.h \
+ /home/Edgar/Documents/game/includes/world/terrain.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstdint \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stdint.h \
+ /usr/include/stdint.h /usr/include/bits/wchar.h \
+ /usr/include/bits/stdint-uintn.h /usr/include/bits/stdint-least.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/vector \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/allocator.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/c++allocator.h \
@@ -117,12 +122,8 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/uses_allocator_args.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tuple \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/ranges_util.h \
- /home/Edgar/Documents/game/utils/random.h \
+ /usr/include/rlgl.h /home/Edgar/Documents/game/includes/utils/random.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/random \
- /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstdint \
- /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stdint.h \
- /usr/include/stdint.h /usr/include/bits/wchar.h \
- /usr/include/bits/stdint-uintn.h /usr/include/bits/stdint-least.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstdlib \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/string \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stringfwd.h \
@@ -167,9 +168,10 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stl_numeric.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/pstl/glue_numeric_defs.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/pstl/execution_defs.h \
- /home/Edgar/Documents/game/utils/frustrum_culling.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/backward/hash_fun.h \
+ /home/Edgar/Documents/game/includes/world/frustrum_culling.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/array \
- /usr/include/rlgl.h \
+ /home/Edgar/Documents/game/includes/utils/eco.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/memory \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stl_tempbuf.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stl_raw_storage_iter.h \
@@ -245,4 +247,22 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/ranges_algobase.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/pstl/glue_memory_defs.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/utility \
- /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stl_relops.h
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/stl_relops.h \
+ /home/Edgar/Documents/game/includes/entities/robot.h \
+ /home/Edgar/Documents/game/includes/utils/config.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/fstream \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/istream \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/ostream \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/ostream.tcc \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/istream.tcc \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/codecvt.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/basic_file.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/c++io.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/fstream.tcc \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/unordered_map \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/unordered_map.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/hashtable.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/hashtable_policy.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/enable_special_members.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/node_handle.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/erase_if.h

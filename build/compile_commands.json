@@ -1,7 +1,7 @@
 [
 {
   "directory": "/home/Edgar/Documents/game/build",
-  "command": "/usr/bin/g++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/home/Edgar/Documents/game/utils -I/home/Edgar/Documents/game/player -g -x c++ -o CMakeFiles/game.dir/main.cpp.o -c /home/Edgar/Documents/game/main.cpp",
+  "command": "/usr/bin/g++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/home/Edgar/Documents/game/includes -I/home/Edgar/Documents/game/config -g -std=gnu++20 -x c++ -o CMakeFiles/game.dir/main.cpp.o -c /home/Edgar/Documents/game/main.cpp",
   "file": "/home/Edgar/Documents/game/main.cpp",
   "output": "/home/Edgar/Documents/game/build/CMakeFiles/game.dir/main.cpp.o"
 }

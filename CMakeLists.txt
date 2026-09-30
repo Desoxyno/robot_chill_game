@@ -10,7 +10,7 @@ find_package(raylib REQUIRED)
 
 add_executable(game)
 
-target_include_directories(game PRIVATE utils/ player/)
+target_include_directories(game PRIVATE includes config)
 
 target_sources(game PRIVATE
     main.cpp

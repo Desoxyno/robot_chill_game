@@ -1,8 +1,8 @@
 #pragma once
 
-#include "camera.h"
-#include "constant.h"
-#include "gameobject.h"
+#include "player/camera.h"
+#include "utils/constant.h"
+#include "core/models.h"
 #include <raylib.h>
 
 class Player : public GameObject {

@@ -54,7 +54,7 @@ build CMakeFiles/game.dir/main.cpp.o.ddi: CXX_SCAN__game_Debug /home/Edgar/Docum
   DEP_FILE = CMakeFiles/game.dir/main.cpp.o.ddi.d
   DYNDEP_INTERMEDIATE_FILE = CMakeFiles/game.dir/main.cpp.o.ddi
   FLAGS = -g -std=gnu++20
-  INCLUDES = -I/home/Edgar/Documents/game/utils -I/home/Edgar/Documents/game/player
+  INCLUDES = -I/home/Edgar/Documents/game/includes -I/home/Edgar/Documents/game/config
   OBJ_FILE = CMakeFiles/game.dir/main.cpp.o
   PREPROCESSED_OUTPUT_FILE = CMakeFiles/game.dir/main.cpp.o.ddi.i
 
@@ -64,7 +64,7 @@ build CMakeFiles/game.dir/main.cpp.o: CXX_COMPILER__game_scanned_Debug /home/Edg
   DEP_FILE = CMakeFiles/game.dir/main.cpp.o.d
   DYNDEP_MODULE_MAP_FILE = CMakeFiles/game.dir/main.cpp.o.modmap
   FLAGS = -g -std=gnu++20
-  INCLUDES = -I/home/Edgar/Documents/game/utils -I/home/Edgar/Documents/game/player
+  INCLUDES = -I/home/Edgar/Documents/game/includes -I/home/Edgar/Documents/game/config
   OBJECT_DIR = CMakeFiles/game.dir
   OBJECT_FILE_DIR = CMakeFiles/game.dir
   TARGET_SUPPORT_DIR = CMakeFiles/game.dir

@@ -1,28 +1,34 @@
 #pragma once
 
+#include <cmath>
 #include <raylib.h>
+#include <raymath.h>
 
 namespace customMath {
 
 class Vector3 {
     public:
-        double x, y, z;
+        float x, y, z;
 
-        Vector3(double x, double y, double z) : x(x), y(y), z(z) {}
+        Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
         Vector3 operator+(const Vector3 &other) {
             return Vector3(x + other.x, y + other.y, z + other.z);
+        }
+
+        Vector3 operator+=(const Vector3 &other) {
+            return Vector3(x += other.x, y += other.y, z += other.z);
         }
 
         Vector3 operator-(const Vector3 &other) {
             return Vector3(x - other.x, y - other.y, z - other.z);
         }
 
-        Vector3 operator*(const double &other) {
+        Vector3 operator*(const float &other) {
             return Vector3(x * other, y * other, z * other);
         }
 
-        Vector3 operator/(const double &other) {
+        Vector3 operator/(const float &other) {
             return Vector3(x / other, y / other, z / other);
         }
 
@@ -32,13 +38,26 @@ class Vector3 {
             }
             return false;
         }
+
 };
+
+
+
+
+
+inline const float Vector3Distance(const Vector3 curr, const Vector3 targ) {
+    return sqrt(pow((targ.x - curr.x), 2) + pow((targ.y - curr.y), 2) + pow((targ.z - curr.z), 2));
+}
+
+inline const float magnitude(const Vector3 &vector) {
+    return sqrt(pow(vector.x, 2) + pow(vector.y, 2) + pow(vector.z, 2));
+}
 
 class Vector4 {
     public:
-        double x, y, z, w;
+        float x, y, z, w;
 
-        Vector4(double x, double y, double z, double w) : x(x), y(y), z(z), w(w) {}
+        Vector4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 
         Vector4 operator+(const Vector4 &other) {
             return Vector4(x + other.x, y + other.y, z + other.z, w + other.w);

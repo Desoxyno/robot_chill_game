@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include <raylib.h>
-#include "vectors.h"
-#include "constant.h"
+#include "math/vectors.h"
+#include "utils/constant.h"
 
 class PlayerCam {
     public:
@@ -23,6 +23,7 @@ class PlayerCam {
         void Update(customMath::Vector3 target_position) {
             distance += -GetMouseWheelMove();
             if (distance > 25) {distance = 25;}
+            if (distance < 1) {distance = 1;}
 
             yaw += GetMouseDelta().x / 10;
             
@@ -30,7 +31,7 @@ class PlayerCam {
             if (pitch <= -60) {pitch = -60;}
             if (pitch >= 60) {pitch = 60;}
 
-            camera.position = raylib_vec(target_position + customMath::Vector3{cos(yaw / radian) * cos(pitch / radian) * distance, sin(pitch / radian) * distance, sin(yaw / radian) * cos(pitch / radian) * distance});
+            camera.position = raylib_vec(target_position + customMath::Vector3{static_cast<float>(cos(yaw / radian) * cos(pitch / radian) * distance), static_cast<float>(sin(pitch / radian) * distance), static_cast<float>(sin(yaw / radian) * cos(pitch / radian) * distance)});
 
             camera.target = raylib_vec(target_position + customMath::Vector3{0, 4, 0});
 

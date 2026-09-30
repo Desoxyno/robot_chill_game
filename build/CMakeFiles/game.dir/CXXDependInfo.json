@@ -14,8 +14,8 @@
 	"forward-modules-from-target-dirs" : [],
 	"include-dirs" : 
 	[
-		"/home/Edgar/Documents/game/utils",
-		"/home/Edgar/Documents/game/player"
+		"/home/Edgar/Documents/game/includes",
+		"/home/Edgar/Documents/game/config"
 	],
 	"language" : "CXX",
 	"linked-target-dirs" : [],

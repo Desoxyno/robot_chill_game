@@ -121,11 +121,11 @@
 			[
 				{
 					"backtrace" : 8,
-					"path" : "/home/Edgar/Documents/game/utils"
+					"path" : "/home/Edgar/Documents/game/includes"
 				},
 				{
 					"backtrace" : 8,
-					"path" : "/home/Edgar/Documents/game/player"
+					"path" : "/home/Edgar/Documents/game/config"
 				}
 			],
 			"language" : "CXX",
