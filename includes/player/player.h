@@ -4,6 +4,7 @@
 #include "player/camera.h"
 #include "utils/constant.h"
 #include "core/models.h"
+#include "world/terrain.h"
 #include <raylib.h>
 #include <raymath.h>
 
@@ -11,10 +12,12 @@ class Player : public GameObject {
     public:
         PlayerCam camera;
 
-        Player(Model &model, customMath::Vector3 position, float rotation_y, Mesh* floor_mesh) : GameObject(&model, position, rotation_y), camera(PlayerCam()), floor_mesh(floor_mesh) {}
+        Player(Model &model, customMath::Vector3 position, float rotation_y, Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&model, position, rotation_y), camera(PlayerCam()), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
 
         float movement_speed = 1;
         float floor_offset = 0.15;
+
+        TerrainGeneration terrain_gen;
 
         Mesh* floor_mesh;
 
@@ -31,11 +34,7 @@ class Player : public GameObject {
         }
 
         void checkGravity() {
-            Ray ray = {raylib_vec(position - customMath::Vector3{0, floor_offset, 0}), {0, -1, 0}};
-            RayCollision ray_collide = GetRayCollisionMesh(ray, *floor_mesh, MatrixIdentity());
-            float error = floor_offset - ray_collide.distance;
-            if (!ray_collide.hit) {return;}
-            else {position.y += error;}
+            position.y = terrain_gen.getHeight(position.x, position.z) + floor_offset;
         }
 
         void UpdCam() {

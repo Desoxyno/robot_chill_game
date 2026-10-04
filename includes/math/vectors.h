@@ -41,9 +41,11 @@ class Vector3 {
 
 };
 
-
-
-
+struct HorizontalVec2 {
+    float x = 0;
+    float z = 0;
+    HorizontalVec2(float x, float z) : x(x), z(z) {}
+};
 
 inline const float Vector3Distance(const Vector3 curr, const Vector3 targ) {
     return sqrt(pow((targ.x - curr.x), 2) + pow((targ.y - curr.y), 2) + pow((targ.z - curr.z), 2));
