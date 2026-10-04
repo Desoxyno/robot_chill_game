@@ -2,7 +2,7 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/include/stdc-predef.h /usr/include/raylib.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stdarg.h \
  /home/Edgar/Documents/game/includes/player/player.h \
- /home/Edgar/Documents/game/includes/player/camera.h \
+ /home/Edgar/Documents/game/includes/math/vectors.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cmath \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/requires_hosted.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -83,9 +83,9 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/poly_hermite.tcc \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/poly_laguerre.tcc \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/tr1/riemann_zeta.tcc \
- /home/Edgar/Documents/game/includes/math/vectors.h \
  /usr/include/raymath.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/math.h \
+ /home/Edgar/Documents/game/includes/player/camera.h \
  /home/Edgar/Documents/game/includes/utils/constant.h \
  /home/Edgar/Documents/game/includes/core/models.h \
  /home/Edgar/Documents/game/includes/core/scene.h \
@@ -94,6 +94,8 @@ CMakeFiles/game.dir/main.cpp.o.ddi: /home/Edgar/Documents/game/main.cpp \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-uintn.h /usr/include/bits/stdint-least.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring \
+ /usr/include/string.h /usr/include/strings.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/vector \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/allocator.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/x86_64-pc-linux-gnu/bits/c++allocator.h \

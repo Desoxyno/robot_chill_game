@@ -1537,7 +1537,7 @@ typedef void (*AudioCallback)(void *bufferData, unsigned int frames);
 # 1 "/home/Edgar/Documents/game/includes/player/player.h" 1
        
 
-# 1 "/home/Edgar/Documents/game/includes/player/camera.h" 1
+# 1 "/home/Edgar/Documents/game/includes/math/vectors.h" 1
        
 
 # 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cmath" 1 3
@@ -27306,12 +27306,7 @@ namespace __gnu_cxx __attribute__ ((__visibility__ ("default")))
 
 
 }
-# 4 "/home/Edgar/Documents/game/includes/player/camera.h" 2
-
-# 1 "/home/Edgar/Documents/game/includes/math/vectors.h" 1
-       
-
-
+# 4 "/home/Edgar/Documents/game/includes/math/vectors.h" 2
 
 # 1 "/usr/include/raymath.h" 1 3 4
 # 168 "/usr/include/raymath.h" 3 4
@@ -30343,7 +30338,13 @@ inline Vector3 raylib_vec(const customMath::Vector3 &to_convert) {
 inline customMath::Vector3 custom_vec(const Vector3 &to_convert) {
     return customMath::Vector3(to_convert.x, to_convert.y, to_convert.z);
 }
-# 6 "/home/Edgar/Documents/game/includes/player/camera.h" 2
+# 4 "/home/Edgar/Documents/game/includes/player/player.h" 2
+# 1 "/home/Edgar/Documents/game/includes/player/camera.h" 1
+       
+
+
+
+
 # 1 "/home/Edgar/Documents/game/includes/utils/constant.h" 1
        
 
@@ -30382,7 +30383,7 @@ class PlayerCam {
 
         }
 };
-# 4 "/home/Edgar/Documents/game/includes/player/player.h" 2
+# 5 "/home/Edgar/Documents/game/includes/player/player.h" 2
 
 # 1 "/home/Edgar/Documents/game/includes/core/models.h" 1
        
@@ -30416,20 +30417,24 @@ public:
 
     virtual ~GameObject() = default;
 };
-# 6 "/home/Edgar/Documents/game/includes/player/player.h" 2
+# 7 "/home/Edgar/Documents/game/includes/player/player.h" 2
+
 
 
 class Player : public GameObject {
     public:
         PlayerCam camera;
 
-        Player(Model &model, customMath::Vector3 position, float rotation_y) : GameObject(&model, position, rotation_y), camera(PlayerCam()) {}
+        Player(Model &model, customMath::Vector3 position, float rotation_y, Mesh* floor_mesh) : GameObject(&model, position, rotation_y), camera(PlayerCam()), floor_mesh(floor_mesh) {}
 
         float movement_speed = 1;
+        float floor_offset = 0.15;
+
+        Mesh* floor_mesh;
 
         void RegisterKey() {
 
-            movement_speed = 10 * GetFrameTime();
+            movement_speed = 30 * GetFrameTime();
 
             if (IsKeyDown(KEY_W)) {position.x += -cos(camera.yaw / radian) * movement_speed; position.z += -sin(camera.yaw / radian) * movement_speed;}
             if (IsKeyDown(KEY_S)) {position.x -= -cos(camera.yaw / radian) * movement_speed; position.z -= -sin(camera.yaw / radian) * movement_speed;}
@@ -30437,7 +30442,14 @@ class Player : public GameObject {
             if (IsKeyDown(KEY_A)) {position.x -= sin(camera.yaw / radian) * movement_speed; position.z -= -cos(camera.yaw / radian) * movement_speed;}
             if (IsKeyDown(KEY_D)) {position.x += sin(camera.yaw / radian) * movement_speed; position.z += -cos(camera.yaw / radian) * movement_speed;}
 
+        }
 
+        void checkGravity() {
+            Ray ray = {raylib_vec(position - customMath::Vector3{0, floor_offset, 0}), {0, -1, 0}};
+            RayCollision ray_collide = GetRayCollisionMesh(ray, *floor_mesh, MatrixIdentity());
+            float error = floor_offset - ray_collide.distance;
+            if (!ray_collide.hit) {return;}
+            else {position.y += error;}
         }
 
         void UpdCam() {
@@ -30448,8 +30460,8 @@ class Player : public GameObject {
         void Update() override {
             RegisterKey();
             UpdCam();
+            checkGravity();
         }
-
 
 };
 # 3 "/home/Edgar/Documents/game/main.cpp" 2
@@ -30573,6 +30585,464 @@ namespace std
 # 144 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstdint" 3
 }
 # 7 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 1 3
+# 47 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 3
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/bits/version.h" 1 3
+# 48 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 2 3
+# 1 "/usr/include/string.h" 1 3 4
+# 26 "/usr/include/string.h" 3 4
+# 1 "/usr/include/bits/libc-header-start.h" 1 3 4
+# 27 "/usr/include/string.h" 2 3 4
+
+extern "C" {
+# 37 "/usr/include/string.h" 3 4
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stddef.h" 1 3 4
+# 38 "/usr/include/string.h" 2 3 4
+# 47 "/usr/include/string.h" 3 4
+extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+       size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void *memmove (void *__dest, const void *__src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+        int __c, size_t __n)
+    noexcept (true) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 4)));
+
+
+
+
+extern void *memset (void *__s, int __c, size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern void *memset_explicit (void *__s, int __c, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern int memcmp (const void *__s1, const void *__s2, size_t __n)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+# 91 "/usr/include/string.h" 3 4
+extern int __memcmpeq (const void *__s1, const void *__s2, size_t __n)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+extern "C++"
+{
+extern void *memchr (void *__s, int __c, size_t __n)
+      noexcept (true) __asm ("memchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern const void *memchr (const void *__s, int __c, size_t __n)
+      noexcept (true) __asm ("memchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 116 "/usr/include/string.h" 3 4
+}
+# 130 "/usr/include/string.h" 3 4
+extern "C++" void *rawmemchr (void *__s, int __c)
+     noexcept (true) __asm ("rawmemchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern "C++" const void *rawmemchr (const void *__s, int __c)
+     noexcept (true) __asm ("rawmemchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern "C++" void *memrchr (void *__s, int __c, size_t __n)
+      noexcept (true) __asm ("memrchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)))
+      __attribute__ ((__access__ (__read_only__, 1, 3)));
+extern "C++" const void *memrchr (const void *__s, int __c, size_t __n)
+      noexcept (true) __asm ("memrchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)))
+      __attribute__ ((__access__ (__read_only__, 1, 3)));
+# 156 "/usr/include/string.h" 3 4
+extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+        size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcmp (const char *__s1, const char *__s2)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcoll (const char *__s1, const char *__s2)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern size_t strxfrm (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+    noexcept (true) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+
+
+
+extern int strcoll_l (const char *__s1, const char *__s2, locale_t __l)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+    locale_t __l) noexcept (true) __attribute__ ((__nonnull__ (2, 4)))
+     __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+
+
+extern char *strdup (const char *__s)
+     noexcept (true) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern char *strndup (const char *__string, size_t __n)
+     noexcept (true) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+# 239 "/usr/include/string.h" 3 4
+extern "C++"
+{
+extern char *strchr (char *__s, int __c)
+     noexcept (true) __asm ("strchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern const char *strchr (const char *__s, int __c)
+     noexcept (true) __asm ("strchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 259 "/usr/include/string.h" 3 4
+}
+# 270 "/usr/include/string.h" 3 4
+extern "C++"
+{
+extern char *strrchr (char *__s, int __c)
+     noexcept (true) __asm ("strrchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern const char *strrchr (const char *__s, int __c)
+     noexcept (true) __asm ("strrchr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 290 "/usr/include/string.h" 3 4
+}
+# 304 "/usr/include/string.h" 3 4
+extern "C++" char *strchrnul (char *__s, int __c)
+     noexcept (true) __asm ("strchrnul") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern "C++" const char *strchrnul (const char *__s, int __c)
+     noexcept (true) __asm ("strchrnul") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 316 "/usr/include/string.h" 3 4
+extern size_t strcspn (const char *__s, const char *__reject)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern size_t strspn (const char *__s, const char *__accept)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern "C++"
+{
+extern char *strpbrk (char *__s, const char *__accept)
+     noexcept (true) __asm ("strpbrk") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern const char *strpbrk (const char *__s, const char *__accept)
+     noexcept (true) __asm ("strpbrk") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+# 344 "/usr/include/string.h" 3 4
+}
+# 355 "/usr/include/string.h" 3 4
+extern "C++"
+{
+extern char *strstr (char *__haystack, const char *__needle)
+     noexcept (true) __asm ("strstr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern const char *strstr (const char *__haystack, const char *__needle)
+     noexcept (true) __asm ("strstr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+# 375 "/usr/include/string.h" 3 4
+}
+# 388 "/usr/include/string.h" 3 4
+extern char *strtok (char *__restrict __s, const char *__restrict __delim)
+     noexcept (true) __attribute__ ((__nonnull__ (2)));
+
+
+
+extern char *__strtok_r (char *__restrict __s,
+    const char *__restrict __delim,
+    char **__restrict __save_ptr)
+     noexcept (true) __attribute__ ((__nonnull__ (2, 3)));
+
+extern char *strtok_r (char *__restrict __s, const char *__restrict __delim,
+         char **__restrict __save_ptr)
+     noexcept (true) __attribute__ ((__nonnull__ (2, 3)));
+
+
+
+
+
+extern "C++" char *strcasestr (char *__haystack, const char *__needle)
+     noexcept (true) __asm ("strcasestr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern "C++" const char *strcasestr (const char *__haystack,
+         const char *__needle)
+     noexcept (true) __asm ("strcasestr") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+# 421 "/usr/include/string.h" 3 4
+extern void *memmem (const void *__haystack, size_t __haystacklen,
+       const void *__needle, size_t __needlelen)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 3)))
+    __attribute__ ((__access__ (__read_only__, 1, 2)))
+    __attribute__ ((__access__ (__read_only__, 3, 4)));
+
+
+
+extern void *__mempcpy (void *__restrict __dest,
+   const void *__restrict __src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+extern void *mempcpy (void *__restrict __dest,
+        const void *__restrict __src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlen (const char *__s)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern size_t strnlen (const char *__string, size_t __maxlen)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern char *strerror (int __errnum) noexcept (true);
+# 476 "/usr/include/string.h" 3 4
+extern char *strerror_r (int __errnum, char *__buf, size_t __buflen)
+     noexcept (true) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 2, 3)));
+
+
+
+
+extern const char *strerrordesc_np (int __err) noexcept (true);
+
+extern const char *strerrorname_np (int __err) noexcept (true);
+
+
+
+
+
+extern char *strerror_l (int __errnum, locale_t __l) noexcept (true);
+
+
+
+# 1 "/usr/include/strings.h" 1 3 4
+# 23 "/usr/include/strings.h" 3 4
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/stddef.h" 1 3 4
+# 24 "/usr/include/strings.h" 2 3 4
+
+
+
+
+
+
+extern "C" {
+
+
+
+extern int bcmp (const void *__s1, const void *__s2, size_t __n)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bcopy (const void *__src, void *__dest, size_t __n)
+  noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bzero (void *__s, size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern "C++"
+{
+extern char *index (char *__s, int __c)
+     noexcept (true) __asm ("index") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern const char *index (const char *__s, int __c)
+     noexcept (true) __asm ("index") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 66 "/usr/include/strings.h" 3 4
+}
+
+
+
+
+
+
+
+extern "C++"
+{
+extern char *rindex (char *__s, int __c)
+     noexcept (true) __asm ("rindex") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern const char *rindex (const char *__s, int __c)
+     noexcept (true) __asm ("rindex") __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+# 94 "/usr/include/strings.h" 3 4
+}
+# 104 "/usr/include/strings.h" 3 4
+extern int ffs (int __i) noexcept (true) __attribute__ ((__const__));
+
+
+
+
+
+extern int ffsl (long int __l) noexcept (true) __attribute__ ((__const__));
+__extension__ extern int ffsll (long long int __ll)
+     noexcept (true) __attribute__ ((__const__));
+
+
+
+extern int strcasecmp (const char *__s1, const char *__s2)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strncasecmp (const char *__s1, const char *__s2, size_t __n)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+
+extern int strcasecmp_l (const char *__s1, const char *__s2, locale_t __loc)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+
+extern int strncasecmp_l (const char *__s1, const char *__s2,
+     size_t __n, locale_t __loc)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 4)));
+
+
+}
+# 495 "/usr/include/string.h" 2 3 4
+
+
+
+extern void explicit_bzero (void *__s, size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__write_only__, 1, 2)));
+
+
+
+extern char *strsep (char **__restrict __stringp,
+       const char *__restrict __delim)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern char *strsignal (int __sig) noexcept (true);
+
+
+
+extern const char *sigabbrev_np (int __sig) noexcept (true);
+
+
+extern const char *sigdescr_np (int __sig) noexcept (true);
+
+
+
+extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+extern char *__stpncpy (char *__restrict __dest,
+   const char *__restrict __src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     noexcept (true) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlcpy (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  noexcept (true) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern size_t strlcat (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  noexcept (true) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__read_write__, 1, 3)));
+
+
+
+
+extern int strverscmp (const char *__s1, const char *__s2)
+     noexcept (true) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strfry (char *__string) noexcept (true) __attribute__ ((__nonnull__ (1)));
+
+
+extern void *memfrob (void *__s, size_t __n) noexcept (true) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__read_write__, 1, 2)));
+
+
+
+
+
+
+
+extern "C++" char *basename (char *__filename)
+     noexcept (true) __asm ("basename") __attribute__ ((__nonnull__ (1)));
+extern "C++" const char *basename (const char *__filename)
+     noexcept (true) __asm ("basename") __attribute__ ((__nonnull__ (1)));
+# 584 "/usr/include/string.h" 3 4
+}
+# 49 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 2 3
+# 74 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 3
+extern "C++"
+{
+namespace std __attribute__ ((__visibility__ ("default")))
+{
+
+
+  using ::memchr;
+  using ::memcmp;
+  using ::memcpy;
+  using ::memmove;
+  using ::memset;
+  using ::strcat;
+  using ::strcmp;
+  using ::strcoll;
+  using ::strcpy;
+  using ::strcspn;
+  using ::strerror;
+  using ::strlen;
+  using ::strncat;
+  using ::strncmp;
+  using ::strncpy;
+  using ::strspn;
+
+  using ::strtok;
+
+  using ::strxfrm;
+  using ::strchr;
+  using ::strpbrk;
+  using ::strrchr;
+  using ::strstr;
+# 127 "/usr/lib/gcc/x86_64-pc-linux-gnu/15/include/g++-v15/cstring" 3
+
+}
+}
+# 8 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
 
 
 
@@ -43778,7 +44248,7 @@ namespace std __attribute__ ((__visibility__ ("default")))
     }
 
 }
-# 11 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
+# 12 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
 # 1 "/usr/include/rlgl.h" 1 3 4
 # 380 "/usr/include/rlgl.h" 3 4
 typedef struct rlVertexBuffer {
@@ -44213,7 +44683,7 @@ extern "C" {
 
 
 }
-# 12 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
+# 13 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
 
 # 1 "/home/Edgar/Documents/game/includes/utils/random.h" 1
        
@@ -62187,7 +62657,7 @@ inline const float generate_dn(const unsigned int &seed, const unsigned int &ind
 
         return result;
 }
-# 14 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
+# 15 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
 # 1 "/home/Edgar/Documents/game/includes/world/frustrum_culling.h" 1
        
 
@@ -62731,10 +63201,10 @@ inline Frustum GetFrustum(const Camera3D &camera) {
 
     return Frustum(left, right, down, up, near, far);
 }
-# 15 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
+# 16 "/home/Edgar/Documents/game/includes/world/terrain.h" 2
 
 
-struct Chunk
+struct ChunkCPU
 {
     EcoBoundingBox box = {};
     uint32_t seed = 0;
@@ -62742,126 +63212,141 @@ struct Chunk
     bool visible = false;
 };
 
-class Terrain
+struct ChunkGPU
 {
-public:
+    EcoBoundingBox box = {};
+    uint32_t seed = 0;
+};
 
-    std::vector<Chunk> chunks;
+class TerrainGeneration {
+    public:
 
-    customMath::Vector3 position = {0, 0, 0};
+    unsigned int resolution;
+    unsigned int width;
+    unsigned int heightmap;
+    unsigned int chunkSize;
+    unsigned int chunkX;
+    unsigned int chunkZ;
 
-    uint8_t height = 1;
+    Mesh floor;
 
-    uint16_t width = 5000;
-
-    uint8_t chunkSize = 55;
-
-    unsigned int chunkX = ceil(float(width) / float(chunkSize));
-
-    unsigned int chunkZ = ceil(float(width) / float(chunkSize));
-
-    Model grass_model_near;
-    Model grass_model_far;
-    Model grass_model_very_far;
-    Model grass_model_farthest;
-
-    Shader instancing_shader;
-    Shader instancing_shader_far;
-
-    int windTimeLoc = -1;
-
-    int seed_loc = -1;
-
-    int minx_loc = -1;
-    int maxx_loc = -1;
-    int minz_loc = -1;
-    int maxz_loc = -1;
-    int stride_loc = -1;
-
-    int mvp_loc = -1;
-
-    unsigned int chunks_visible = 0;
-
-    unsigned int chunks_draw_LOD0 = 0;
-    unsigned int chunks_draw_LOD1 = 0;
-    unsigned int chunks_draw_LOD2 = 0;
-    unsigned int chunks_draw_LOD3 = 0;
-
-    Terrain(customMath::Vector3 position)
-        : position(position)
-    {
-        grass_model_near =
-            LoadModel("assets/grass/grass_LOD0.glb");
-
-        grass_model_far =
-            LoadModel("assets/grass/grass_LOD1.glb");
-
-        grass_model_very_far =
-            LoadModel("assets/grass/grass_LOD2.glb");
-
-        grass_model_farthest =
-            LoadModel("assets/grass/grass_LOD3.glb");
-
-        instancing_shader =
-            LoadShader(
-                "assets/shaders/instancing.vs",
-                "assets/shaders/instancing.fs"
-            );
-
-        instancing_shader_far =
-            LoadShader(
-                "assets/shaders/instancing_far.vs",
-                "assets/shaders/instancing.fs"
-            );
-
-        seed_loc = GetShaderLocation(instancing_shader, "chunkSeed");
-
-        minx_loc = GetShaderLocation(instancing_shader, "minx");
-        maxx_loc = GetShaderLocation(instancing_shader, "maxx");
-        minz_loc = GetShaderLocation(instancing_shader, "minz");
-        maxz_loc = GetShaderLocation(instancing_shader, "maxz");
-        stride_loc = GetShaderLocation(instancing_shader, "instanceStride");
-
-        mvp_loc = GetShaderLocation(instancing_shader, "mvp");
-
-        instancing_shader.locs[SHADER_LOC_MATRIX_MVP] =
-            GetShaderLocation(
-                instancing_shader,
-                "mvp"
-            );
-
-        instancing_shader.locs[SHADER_LOC_VERTEX_POSITION] =
-        GetShaderLocationAttrib(instancing_shader, "vertexPosition");
-
-        windTimeLoc = GetShaderLocation(instancing_shader, "windTime");
-
-        GenerateTerrain();
+    TerrainGeneration(float width, float chunkSize, unsigned int resolution) : width(width), chunkSize(chunkSize), resolution(resolution) {
+            chunkX = ceil(width / chunkSize);
+            chunkZ = ceil(width / chunkSize);
+            GenerateTerrain();
     }
 
-    const uint32_t GetDistance(const Chunk& chunk, const Camera3D& camera) const {
-            float centreX =
-                (float(chunk.box.min.x) + float(chunk.box.max.x)) / 2;
 
-            float centreY =
-                (float(chunk.box.min.y) + float(chunk.box.max.y)) / 2;
+    std::vector<ChunkCPU> chunks;
 
-            float centreZ =
-                (float(chunk.box.min.z) + float(chunk.box.max.z)) / 2;
+    void GenerateTerrainMesh() {
+        std::vector<Vector3> vertex_array;
+        std::vector<float> heights;
+        heights.resize(resolution * resolution);
+        std::vector<unsigned short> indices_array;
+        vertex_array.reserve(resolution * resolution);
+        Vector3 vertex_pos = {0, 0, 0};
+        float spacing = float(width) / (resolution - 1);
+        Mesh new_mesh = { 0 };
 
+        for (uint16_t i = 0; i < resolution; i++) {
+            for (uint16_t j = 0; j < resolution; j++) {
+                vertex_pos = {(i * spacing), 0, (j * spacing)};
 
-            float distance =
-                (camera.position.x - centreX) * (camera.position.x - centreX)
-                +
-                (camera.position.y - centreY) * (camera.position.y - centreY)
-                +
-                (camera.position.z - centreZ) * (camera.position.z - centreZ);
+                float gx = vertex_pos.x / 100.0f;
+                float gz = vertex_pos.z / 100.0f;
 
-            return distance;
+                int cellX = int(std::floor(gx));
+                int cellZ = int(std::floor(gz));
+
+                float fracX = gx - std::floor(gx);
+                float fracZ = gz - std::floor(gz);
+
+                uint hashA = uint(cellX) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+                uint hashB = uint(cellX) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+                uint hashC = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+                uint hashD = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+
+                hashA = hash32(hashA);
+                hashB = hash32(hashB);
+                hashC = hash32(hashC);
+                hashD = hash32(hashD);
+
+                float A = float(hashA) / 4294967295.0f * 8.0f;
+                float B = float(hashB) / 4294967295.0f * 8.0f;
+                float C = float(hashC) / 4294967295.0f * 8.0f;
+                float D = float(hashD) / 4294967295.0f * 8.0f;
+
+                float height;
+
+                if (fracX + fracZ <= 1.0f) {
+                    float weightA = 1.0f - fracX - fracZ;
+                    float weightB = fracZ;
+                    float weightC = fracX;
+
+                    height = A * weightA + B * weightB + C * weightC;
+                }
+                else {
+                    float weightB = 1.0f - fracX;
+                    float weightD = fracX + fracZ - 1.0f;
+                    float weightC = 1.0f - fracZ;
+
+                    height = B * weightB + D * weightD + C * weightC;
+                }
+
+                heights[i * resolution + j] = height;
+
+                vertex_pos.y = height;
+
+                vertex_array.push_back(vertex_pos);
+            }
+        }
+
+        for (uint16_t i = 0; i < resolution - 1; i++) {
+            for (uint16_t j = 0; j < resolution - 1; j++) {
+                uint32_t a = i * resolution + j;
+                uint32_t b = a + 1;
+                uint32_t c = (i + 1) * resolution + j;
+                uint32_t d = c + 1;
+
+                indices_array.push_back(a);
+                indices_array.push_back(b);
+                indices_array.push_back(c);
+
+                indices_array.push_back(b);
+                indices_array.push_back(d);
+                indices_array.push_back(c);
+            }
+        }
+
+        new_mesh.triangleCount = indices_array.size() / 3;
+        new_mesh.vertexCount = vertex_array.size();
+
+        std::vector<float> c_vertex_array;
+
+        for (auto vec : vertex_array) {
+            c_vertex_array.push_back(vec.x);
+            c_vertex_array.push_back(vec.y);
+            c_vertex_array.push_back(vec.z);
+        }
+
+        new_mesh.vertices = (float*)MemAlloc(c_vertex_array.size() * sizeof(float));
+        memcpy(new_mesh.vertices, c_vertex_array.data(), c_vertex_array.size() * sizeof(float));
+
+        new_mesh.indices = (unsigned short*)MemAlloc(indices_array.size() * sizeof(unsigned short));
+        memcpy(new_mesh.indices, indices_array.data(), indices_array.size() * sizeof(unsigned short));
+
+        UploadMesh(&new_mesh, false);
+
+        floor = new_mesh;
+
+        heightmap = rlLoadTexture(heights.data(), resolution, resolution, RL_PIXELFORMAT_UNCOMPRESSED_R32, 1);
     }
-
 
     void GenerateTerrain()
     {
+        GenerateTerrainMesh();
+
         unsigned int terrainMinX = 0;
 
         unsigned int terrainMinZ = 0;
@@ -62870,7 +63355,7 @@ public:
         {
             for (int cx = 0; cx < chunkX; cx++)
             {
-                Chunk new_chunk;
+                ChunkCPU new_chunk;
 
                 new_chunk.box.min.x = int16_t(
                     terrainMinX + cx * chunkSize);
@@ -62887,7 +63372,7 @@ public:
 
                 new_chunk.box.min.y = 0;
 
-                new_chunk.box.max.y = 3;
+                new_chunk.box.max.y = 8;
 
                 new_chunk.seed = hash32(50 + cx * 73856093u + cz * 19349663u);
 
@@ -62898,34 +63383,148 @@ public:
         }
 
     }
+};
 
-    void SetShaders(const Shader& shader, const Chunk &chunk, const Matrix mvp, const int step, const float windTime, const bool far) {
+class Terrain
+{
+public:
+    customMath::Vector3 position = {0, 0, 0};
+
+    Model grass_model_near;
+    Model grass_model_far;
+    Model grass_model_very_far;
+    Model grass_model_farthest;
+
+    Shader instancing_shader;
+    Shader instancing_shader_far;
+
+    Shader terrain_shader;
+
+    Material terrain_material = LoadMaterialDefault();
+
+    float gpu_frame_time = 0;
+
+    int windTimeLoc = -1;
+
+    int seed_loc = -1;
+
+    int minx_loc = -1;
+    int maxx_loc = -1;
+    int minz_loc = -1;
+    int maxz_loc = -1;
+    int stride_loc = -1;
+    int heights_loc = -1;
+
+    int mvp_loc = -1;
+
+    unsigned int chunks_visible = 0;
+
+    unsigned int chunks_draw_LOD0 = 0;
+    unsigned int chunks_draw_LOD1 = 0;
+    unsigned int chunks_draw_LOD2 = 0;
+    unsigned int chunks_draw_LOD3 = 0;
+
+    TerrainGeneration terrain_gen = TerrainGeneration(5000, 55, 255);
+
+    Texture2D h_map = Texture2D(terrain_gen.heightmap, terrain_gen.resolution, terrain_gen.resolution, 1, RL_PIXELFORMAT_UNCOMPRESSED_R32);
+
+    Terrain(customMath::Vector3 position)
+        : position(position)
+    {
+
+        grass_model_near =
+            LoadModel("assets/grass/grass_LOD0.glb");
+
+        grass_model_far =
+            LoadModel("assets/grass/grass_LOD1.glb");
+
+        grass_model_very_far =
+            LoadModel("assets/grass/grass_LOD2.glb");
+
+        grass_model_farthest =
+            LoadModel("assets/grass/grass_LOD3.glb");
+
+        instancing_shader =
+            LoadShader(
+                "assets/shaders/instancing.vert",
+                "assets/shaders/instancing.frag"
+            );
+
+        instancing_shader_far =
+            LoadShader(
+                "assets/shaders/instancing_far.vert",
+                "assets/shaders/instancing.frag"
+            );
+
+        terrain_shader = LoadShader("assets/shaders/terrain.vert", "assets/shaders/terrain.frag");
+        terrain_material.shader = terrain_shader;
+
+        seed_loc = GetShaderLocation(instancing_shader, "chunkSeed");
+
+        minx_loc = GetShaderLocation(instancing_shader, "minx");
+        maxx_loc = GetShaderLocation(instancing_shader, "maxx");
+        minz_loc = GetShaderLocation(instancing_shader, "minz");
+        maxz_loc = GetShaderLocation(instancing_shader, "maxz");
+        stride_loc = GetShaderLocation(instancing_shader, "instanceStride");
+        heights_loc = GetShaderLocation(instancing_shader, "terrainHeightmap");
+
+        mvp_loc = GetShaderLocation(instancing_shader, "mvp");
+
+        instancing_shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(instancing_shader, "mvp");
+        terrain_shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(terrain_shader, "mvp");
+
+        instancing_shader.locs[SHADER_LOC_VERTEX_POSITION] = GetShaderLocationAttrib(instancing_shader, "vertexPosition");
+
+        windTimeLoc = GetShaderLocation(instancing_shader, "windTime");
+
+        rlActiveTextureSlot(1);
+        rlEnableTexture(terrain_gen.heightmap);
+        SetShaderValueTexture(instancing_shader, heights_loc, h_map);
+        SetShaderValueTexture(instancing_shader_far, heights_loc, h_map);
+    }
+
+    const float GetDistance(const ChunkCPU& chunk, const Camera3D& camera) const {
+            float centreX = (float(chunk.box.min.x) + float(chunk.box.max.x)) / 2;
+
+            float centreY = (float(chunk.box.min.y) + float(chunk.box.max.y)) / 2;
+
+            float centreZ = (float(chunk.box.min.z) + float(chunk.box.max.z)) / 2;
+
+
+            float distance =
+                (camera.position.x - centreX) * (camera.position.x - centreX)
+                +
+                (camera.position.y - centreY) * (camera.position.y - centreY)
+                +
+                (camera.position.z - centreZ) * (camera.position.z - centreZ);
+
+            return distance;
+    }
+
+    void SetShaders(const Shader& shader, const ChunkCPU &chunk, const Matrix &mvp, const int &step, const float &windTime, const bool &far) {
             if (!far) {
                 SetShaderValue(shader, windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
             }
 
-            unsigned int tempMiX = unsigned(int(chunk.box.min.x));
-            unsigned int tempMaX = unsigned(int(chunk.box.max.x));
-            unsigned int tempMiZ = unsigned(int(chunk.box.min.z));
-            unsigned int tempMaZ = unsigned(int(chunk.box.max.z));
+            int tempMiX = int(chunk.box.min.x);
+            int tempMaX = int(chunk.box.max.x);
+            int tempMiZ = int(chunk.box.min.z);
+            int tempMaZ = int(chunk.box.max.z);
 
-            SetShaderValueMatrix(shader, mvp_loc, mvp);
             SetShaderValue(shader, seed_loc, &chunk.seed, SHADER_UNIFORM_UINT);
-            SetShaderValue(shader, minx_loc, &tempMiX, SHADER_UNIFORM_UINT);
-            SetShaderValue(shader, maxx_loc, &tempMaX, SHADER_UNIFORM_UINT);
-            SetShaderValue(shader, minz_loc, &tempMiZ, SHADER_UNIFORM_UINT);
-            SetShaderValue(shader, maxz_loc, &tempMaZ, SHADER_UNIFORM_UINT);
+            SetShaderValue(shader, minx_loc, &tempMiX, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, maxx_loc, &tempMaX, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, minz_loc, &tempMiZ, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, maxz_loc, &tempMaZ, SHADER_UNIFORM_INT);
+
             SetShaderValue(shader, stride_loc, &step, SHADER_UNIFORM_UINT);
     }
 
-
     void Update(Camera3D& camera)
     {
-        Frustum camera_frustum =
-            GetFrustum(camera);
+        Frustum camera_frustum = GetFrustum(camera);
 
-
-        for (auto& chunk : chunks)
+        for (auto& chunk : terrain_gen.chunks)
         {
             chunk.visible = !IsBoxOutsideFrustum(chunk.box, camera_frustum);
             if (chunk.visible) {
@@ -62942,11 +63541,8 @@ public:
 
     void Draw(const Camera3D& camera)
     {
-        DrawCube(raylib_vec({float(width) / 2, 0, float(width) / 2}), width, height, width, 
-# 225 "/home/Edgar/Documents/game/includes/world/terrain.h" 3 4
-                                                                                           Color{ 127, 106, 79, 255 }
-# 225 "/home/Edgar/Documents/game/includes/world/terrain.h"
-                                                                                                );
+        unsigned int grass_vaoId = grass_model_near.meshes[0].vaoId;
+        unsigned int grass_tri_count = grass_model_near.meshes[0].triangleCount;
 
         float windTime = static_cast<float>(GetTime());
 
@@ -62961,9 +63557,22 @@ public:
 
         Matrix mvp = MatrixMultiply(view_matrix, projection_matrix);
 
+        Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
+
+        rlDisableBackfaceCulling();
+        DrawMesh(terrain_gen.floor, terrain_material, floor_transform);
+        rlEnableBackfaceCulling();
+
+        float start_time = GetTime();
+
         BeginShaderMode(instancing_shader);
 
-        for (auto& chunk : chunks)
+        SetShaderValueMatrix(instancing_shader, mvp_loc, mvp);
+        SetShaderValueMatrix(instancing_shader_far, mvp_loc, mvp);
+
+        rlEnableVertexArray(grass_vaoId);
+
+        for (auto& chunk : terrain_gen.chunks)
         {
             if (!chunk.visible || chunk.current_LOD != 0)
                 continue;
@@ -62971,29 +63580,23 @@ public:
             chunks_visible++;
             chunks_draw_LOD0++;
 
-            uint8_t step = 1;
-            uint16_t grass = 800;
-            uint8_t multiplicator = 60;
-            bool far = false;
+            SetShaders(instancing_shader, chunk, mvp, 1, windTime, false);
 
-            unsigned int grass_vaoId = grass_model_near.meshes[0].vaoId;
-            unsigned int grass_tri_count = grass_model_near.meshes[0].triangleCount;
 
-            SetShaders(instancing_shader, chunk, mvp, step, windTime, false);
+            rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, 800 * 60);
 
-            rlEnableVertexArray(grass_vaoId);
-            rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, grass * multiplicator);
-            rlDisableVertexArray();
 
         }
+
+        rlDisableVertexArray();
 
         EndShaderMode();
 
         BeginShaderMode(instancing_shader_far);
 
-        for (auto& chunk : chunks)
+        for (auto& chunk : terrain_gen.chunks)
         {
-            if (!chunk.visible || chunk.current_LOD == 0)
+            if (!chunk.visible || chunk.current_LOD == 0 || chunk.current_LOD == 4)
                 continue;
 
             chunks_visible++;
@@ -63002,8 +63605,7 @@ public:
 
             u_int8_t step = 1;
             u_int16_t grass = 0;
-            u_int8_t multiplicator = 70;
-            bool far = true;
+            u_int8_t multiplicator = 0;
 
             switch (chunk.current_LOD) {
                 case 1:
@@ -63041,6 +63643,8 @@ public:
         }
 
         EndShaderMode();
+
+        gpu_frame_time = GetTime() - start_time;
     }
 };
 # 6 "/home/Edgar/Documents/game/includes/core/scene.h" 2
@@ -83746,6 +84350,7 @@ class Scene {
     private:
 
         std::vector<std::unique_ptr<GameObject>> scene_objects;
+        float cpu_frame_time = 0.0f;
 
 
     public:
@@ -83754,6 +84359,13 @@ class Scene {
         std::unique_ptr<Player> player;
 
         Scene(std::unique_ptr<Player> player, std::unique_ptr<Terrain> terrain) : player(std::move(player)), terrain(std::move(terrain)) {}
+
+        void Tick(Model &skybox) {
+            float f_start = GetTime();
+            Update();
+            Draw(skybox, cpu_frame_time, terrain->gpu_frame_time);
+            cpu_frame_time = GetTime() - f_start;
+        }
 
         void Update() {
 
@@ -83770,7 +84382,7 @@ class Scene {
             scene_objects.push_back(std::move(to_add));
         }
 
-        void Draw(Model &skybox) {
+        void Draw(Model &skybox, float cpu_frame_time, float gpu_frame_time) {
             BeginDrawing();
 
             BeginMode3D(player->camera.camera);
@@ -83779,9 +84391,9 @@ class Scene {
             rlDisableDepthMask();
 
             DrawModel(skybox, player->camera.camera.position, 1.0, 
-# 50 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+# 58 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
                                                                   Color{ 255, 255, 255, 255 }
-# 50 "/home/Edgar/Documents/game/includes/core/scene.h"
+# 58 "/home/Edgar/Documents/game/includes/core/scene.h"
                                                                        );
 
             rlEnableDepthMask();
@@ -83796,31 +84408,41 @@ class Scene {
 
             EndMode3D();
 
-            DrawText(("Chunks visibles:" + std::to_string(terrain->chunks_visible) + "/" + std::to_string(terrain->chunks.size())).c_str(), 10, 30, 25, 
-# 64 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
-                                                                                                                                                       Color{ 255, 255, 255, 255 }
-# 64 "/home/Edgar/Documents/game/includes/core/scene.h"
-                                                                                                                                                            );
+            DrawText(("Chunks visibles:" + std::to_string(terrain->chunks_visible) + "/" + std::to_string(terrain->terrain_gen.chunks.size())).c_str(), 10, 30, 25, 
+# 72 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+                                                                                                                                                                   Color{ 255, 255, 255, 255 }
+# 72 "/home/Edgar/Documents/game/includes/core/scene.h"
+                                                                                                                                                                        );
             DrawText(("LOD0:" + std::to_string(terrain->chunks_draw_LOD0)).c_str(), 10, 55, 25, 
-# 65 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+# 73 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
                                                                                                Color{ 255, 255, 255, 255 }
-# 65 "/home/Edgar/Documents/game/includes/core/scene.h"
+# 73 "/home/Edgar/Documents/game/includes/core/scene.h"
                                                                                                     );
             DrawText(("LOD1:" + std::to_string(terrain->chunks_draw_LOD1)).c_str(), 10, 80, 25, 
-# 66 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+# 74 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
                                                                                                Color{ 255, 255, 255, 255 }
-# 66 "/home/Edgar/Documents/game/includes/core/scene.h"
+# 74 "/home/Edgar/Documents/game/includes/core/scene.h"
                                                                                                     );
             DrawText(("LOD2:" + std::to_string(terrain->chunks_draw_LOD2)).c_str(), 10, 105, 25, 
-# 67 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+# 75 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
                                                                                                 Color{ 255, 255, 255, 255 }
-# 67 "/home/Edgar/Documents/game/includes/core/scene.h"
+# 75 "/home/Edgar/Documents/game/includes/core/scene.h"
                                                                                                      );
             DrawText(("LOD3:" + std::to_string(terrain->chunks_draw_LOD3)).c_str(), 10, 130, 25, 
-# 68 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+# 76 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
                                                                                                 Color{ 255, 255, 255, 255 }
-# 68 "/home/Edgar/Documents/game/includes/core/scene.h"
+# 76 "/home/Edgar/Documents/game/includes/core/scene.h"
                                                                                                      );
+            DrawText(("CPU frame time: " + std::to_string(cpu_frame_time * 1000) + "ms").c_str(), 10, 155, 25, 
+# 77 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+                                                                                                              Color{ 255, 255, 255, 255 }
+# 77 "/home/Edgar/Documents/game/includes/core/scene.h"
+                                                                                                                   );
+            DrawText(("GPU frame time: " + std::to_string(gpu_frame_time * 1000) + "ms").c_str(), 10, 180, 25, 
+# 78 "/home/Edgar/Documents/game/includes/core/scene.h" 3 4
+                                                                                                              Color{ 255, 255, 255, 255 }
+# 78 "/home/Edgar/Documents/game/includes/core/scene.h"
+                                                                                                                   );
 
             DrawFPS(10, 10);
 
@@ -83849,9 +84471,13 @@ class Robot : public GameObject{
 
         float angle = 0;
 
+        float floor_offset = 0.5;
+
+        Mesh* floor_mesh;
+
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        Robot(float terrain_width) : GameObject(&robot, {0, 0, 0}, 0), terrain_width(terrain_width) {}
+        Robot(float terrain_width, Mesh* floor_mesh) : GameObject(&robot, {2500, 0, 2500}, 0), terrain_width(terrain_width), floor_mesh(floor_mesh) {}
 
         void UpdateAngle(float dt, float target_angle) {
                 float delta = target_angle - angle;
@@ -83864,11 +84490,20 @@ class Robot : public GameObject{
                 else if (delta < 0){angle -= turning_capacity;}
         }
 
+
+        void checkGravity() {
+            Ray ray = {raylib_vec(position - customMath::Vector3{0, floor_offset, 0}), {0, -1, 0}};
+            RayCollision ray_collide = GetRayCollisionMesh(ray, *floor_mesh, MatrixIdentity());
+            float error = floor_offset - ray_collide.distance;
+            if (!ray_collide.hit) {return;}
+            else {position.y += error;}
+        }
+
         void Draw() override {
             DrawModelEx(*model, raylib_vec(position), raylib_vec({0, 1, 0}), angle, {12, 12, 12}, 
-# 42 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
+# 55 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
                                                                                                  Color{ 255, 255, 255, 255 }
-# 42 "/home/Edgar/Documents/game/includes/entities/robot.h"
+# 55 "/home/Edgar/Documents/game/includes/entities/robot.h"
                                                                                                       );
             DrawModelEx(*model, raylib_vec(target_pos + customMath::Vector3{0, 3, 0}), raylib_vec({0, 1, 0}), angle, {1, 1, 1}, {255, 0, 0, 120});
         }
@@ -83883,17 +84518,17 @@ class Robot : public GameObject{
                 customMath::Vector3 direction = target_pos - position;
                 float dt = GetFrameTime();
                 float target_angle = (atan2(direction.x, direction.z) * 
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
                                                                        (180.0f/3.14159265358979323846f)
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h"
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h"
                                                                               ) - (
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
                                                                                    3.14159265358979323846f
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h"
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h"
                                                                                      /2 * 
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h" 3 4
                                                                                           (180.0f/3.14159265358979323846f)
-# 55 "/home/Edgar/Documents/game/includes/entities/robot.h"
+# 68 "/home/Edgar/Documents/game/includes/entities/robot.h"
                                                                                                  );
 
                 if (angle != target_angle) {UpdateAngle(dt, target_angle);}
@@ -83910,10 +84545,9 @@ class Robot : public GameObject{
 
                 position += direction;
 
+                checkGravity();
+
                 }
-
-
-
 
             }
         }
@@ -95077,6 +95711,7 @@ class Config {
 
         std::string getRESpath(std::string ressource) const {
             auto itr = value_array.find(ressource);
+            if (itr == value_array.end()) {return std::string("No path found");}
             std::string path = ("assets/" + itr->second);
             return path;
         };
@@ -95085,8 +95720,8 @@ class Config {
 
 int main() {
 
-    InitWindow(1280, 720, "Game");
     SetConfigFlags( FLAG_MSAA_4X_HINT);
+    InitWindow(1280, 720, "Game");
 
     Config conf = Config("config/config.cfg");
 
@@ -95094,36 +95729,36 @@ int main() {
     Texture2D sky = LoadTexture(conf.getRESpath("texture_stars").c_str());
     Shader cloud_shader = LoadShader(conf.getRESpath("shader_skybox_vs").c_str(), conf.getRESpath("shader_skybox_fs").c_str());
 
-    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 0.35, 2500}, 0));
+
     std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>(Terrain({0, 0, 0}));
+    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, &test_terrain->terrain_gen.floor));
 
     Scene test_map = Scene(std::move(player), std::move(test_terrain));
 
     Mesh sphere = GenMeshSphere(100.0f, 100.0f, 100.0f);
     Model skybox = LoadModelFromMesh(sphere);
-    Robot robot = Robot(test_map.terrain->width);
+    Robot robot = Robot(test_map.terrain->terrain_gen.width, &test_terrain->terrain_gen.floor);
 
     skybox.materials[0].shader = cloud_shader;
     skybox.materials[0].maps[
-# 30 "/home/Edgar/Documents/game/main.cpp" 3 4
+# 31 "/home/Edgar/Documents/game/main.cpp" 3 4
                             MATERIAL_MAP_ALBEDO
-# 30 "/home/Edgar/Documents/game/main.cpp"
+# 31 "/home/Edgar/Documents/game/main.cpp"
                                                 ].texture = sky;
 
     test_map.AddObject(std::make_unique<Robot>(robot));
 
-
+    DisableCursor();
 
     while (!WindowShouldClose()) {
 
         ClearBackground(
-# 38 "/home/Edgar/Documents/game/main.cpp" 3 4
+# 39 "/home/Edgar/Documents/game/main.cpp" 3 4
                        Color{ 255, 255, 255, 255 }
-# 38 "/home/Edgar/Documents/game/main.cpp"
+# 39 "/home/Edgar/Documents/game/main.cpp"
                             );
 
-        test_map.Update();
-        test_map.Draw(skybox);
+        test_map.Tick(skybox);
 
     }
 

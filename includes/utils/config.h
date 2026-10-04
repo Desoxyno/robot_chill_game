@@ -41,6 +41,7 @@ class Config {
 
         std::string getRESpath(std::string ressource) const {
             auto itr = value_array.find(ressource);
+            if (itr == value_array.end()) {return std::string("No path found");}
             std::string path = ("assets/" + itr->second);
             return path;
         };

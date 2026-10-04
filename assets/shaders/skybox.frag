@@ -16,6 +16,6 @@ void main()
 
     float v = vDirection.y * 0.5 + 0.5;
 
-    fragColor = texture(texture0, vec2(u, v));
-    // fragColor = vec4(vDirection.y, vDirection.y, vDirection.y, 1);
+    // fragColor = texture(texture0, vec2(u, v));
+    fragColor = vec4(178.0 / 255.0, 1, 1, 1);
 }

@@ -23,9 +23,13 @@ class Robot : public GameObject{
 
         float angle = 0;
 
+        float floor_offset = 0.5;
+
+        Mesh* floor_mesh;
+
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        Robot(float terrain_width) : GameObject(&robot, {0, 0, 0}, 0), terrain_width(terrain_width) {}
+        Robot(float terrain_width, Mesh* floor_mesh) : GameObject(&robot, {2500, 0, 2500}, 0), terrain_width(terrain_width), floor_mesh(floor_mesh) {}
 
         void UpdateAngle(float dt, float target_angle) {
                 float delta = target_angle - angle;
@@ -36,6 +40,15 @@ class Robot : public GameObject{
                 if (abs(delta) < turning_capacity) {angle = target_angle;}
                 else if (delta > 0){angle += turning_capacity;}
                 else if (delta < 0){angle -= turning_capacity;}
+        }
+
+
+        void checkGravity() {
+            Ray ray = {raylib_vec(position - customMath::Vector3{0, floor_offset, 0}), {0, -1, 0}};
+            RayCollision ray_collide = GetRayCollisionMesh(ray, *floor_mesh, MatrixIdentity());
+            float error = floor_offset - ray_collide.distance;
+            if (!ray_collide.hit) {return;}
+            else {position.y += error;}
         }
 
         void Draw() override {
@@ -68,10 +81,9 @@ class Robot : public GameObject{
 
                 position += direction;
 
+                checkGravity();
+
                 }
-                
-
-
 
             }
         }
