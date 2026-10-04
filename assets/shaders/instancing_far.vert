@@ -4,14 +4,11 @@ in vec3 vertexPosition;
 in vec2 vertexTexCoord;
 
 uniform mat4 mvp;
-uniform uint chunkSeed;
 uniform int minx;
 uniform int maxx;
 uniform int minz;
 uniform int maxz;
 uniform float windTime;
-
-uniform uint instanceStride;
 
 flat out float variation;
 out float grassheight;
@@ -19,6 +16,8 @@ out float grassheight;
 out float baseX;
 
 uniform sampler2D terrainHeightmap;
+
+uniform uint hash;
 
 uint hash32(uint value)
 {
@@ -41,10 +40,8 @@ float random01(uint index, uint channel, uint hash)
 
 void main()
 {
-    float offset = 0;
     float spacing = float(5000) / 254.0;
 
-    uint hash = hash32(chunkSeed);
     uint instanceIndex = uint(gl_InstanceID);
 
     variation = 0.8 + random01(instanceIndex, 5u, hash);
@@ -92,8 +89,6 @@ void main()
 
         height = B * weightB + D * weightD + C * weightC;
     }
-
-    height -= offset;
 
     float rotationY = random01(instanceIndex, 2u, hash) * 6.28318530718;
 

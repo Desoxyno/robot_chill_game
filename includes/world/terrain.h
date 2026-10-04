@@ -229,7 +229,6 @@ public:
     int maxx_loc = -1;
     int minz_loc = -1;
     int maxz_loc = -1;
-    int stride_loc = -1;
     int heights_loc = -1;
 
     int mvp_loc = -1;
@@ -282,7 +281,6 @@ public:
         maxx_loc = GetShaderLocation(instancing_shader, "maxx");
         minz_loc = GetShaderLocation(instancing_shader, "minz");
         maxz_loc = GetShaderLocation(instancing_shader, "maxz");
-        stride_loc = GetShaderLocation(instancing_shader, "instanceStride");
         heights_loc = GetShaderLocation(instancing_shader, "terrainHeightmap");
 
         mvp_loc = GetShaderLocation(instancing_shader, "mvp");
@@ -333,8 +331,6 @@ public:
             SetShaderValue(shader, maxx_loc, &tempMaX, SHADER_UNIFORM_INT);
             SetShaderValue(shader, minz_loc, &tempMiZ, SHADER_UNIFORM_INT);
             SetShaderValue(shader, maxz_loc, &tempMaZ, SHADER_UNIFORM_INT);
-
-            SetShaderValue(shader, stride_loc, &step, SHADER_UNIFORM_UINT);
     }
 
     void Update(Camera3D& camera)
