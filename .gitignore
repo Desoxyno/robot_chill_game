@@ -1,3 +1,13 @@
-/.cache/*
+/build/
+/.vscode/
 
-/.build/*
+# Compiled files
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+
+# Debug / profiling
+*.log
