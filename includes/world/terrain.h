@@ -50,6 +50,51 @@ class TerrainGeneration {
    
     std::vector<ChunkCPU> chunks;
 
+    float getHeight(float x, float z) {
+        float gx = x / 100.0f;
+        float gz = z / 100.0f;
+
+        int cellX = int(std::floor(gx));
+        int cellZ = int(std::floor(gz));
+
+        float fracX = gx - std::floor(gx);
+        float fracZ = gz - std::floor(gz);
+
+        uint hashA = uint(cellX) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+        uint hashB = uint(cellX) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+        uint hashC = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+        uint hashD = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+
+        hashA = hash32(hashA);
+        hashB = hash32(hashB);
+        hashC = hash32(hashC);
+        hashD = hash32(hashD);
+
+        float A = float(hashA) / 4294967295.0f * 8.0f;
+        float B = float(hashB) / 4294967295.0f * 8.0f;
+        float C = float(hashC) / 4294967295.0f * 8.0f;
+        float D = float(hashD) / 4294967295.0f * 8.0f;
+
+        float height;
+
+        if (fracX + fracZ <= 1.0f) {
+            float weightA = 1.0f - fracX - fracZ;
+            float weightB = fracZ;
+            float weightC = fracX;
+
+            height = A * weightA + B * weightB + C * weightC;
+        }
+
+        else {
+            float weightB = 1.0f - fracX;
+            float weightD = fracX + fracZ - 1.0f;
+            float weightC = 1.0f - fracZ;
+
+            height = B * weightB + D * weightD + C * weightC;
+                }
+        return height;
+    }
+
     void GenerateTerrainMesh() {
         std::vector<Vector3> vertex_array;
         std::vector<float> heights;
@@ -64,46 +109,7 @@ class TerrainGeneration {
             for (uint16_t j = 0; j < resolution; j++) {
                 vertex_pos = {(i * spacing), 0, (j * spacing)};
 
-                float gx = vertex_pos.x / 100.0f;
-                float gz = vertex_pos.z / 100.0f;
-
-                int cellX = int(std::floor(gx));
-                int cellZ = int(std::floor(gz));
-
-                float fracX = gx - std::floor(gx);
-                float fracZ = gz - std::floor(gz);
-
-                uint hashA = uint(cellX) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
-                uint hashB = uint(cellX) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
-                uint hashC = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
-                uint hashD = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
-
-                hashA = hash32(hashA);
-                hashB = hash32(hashB);
-                hashC = hash32(hashC);
-                hashD = hash32(hashD);
-
-                float A = float(hashA) / 4294967295.0f * 8.0f;
-                float B = float(hashB) / 4294967295.0f * 8.0f;
-                float C = float(hashC) / 4294967295.0f * 8.0f;
-                float D = float(hashD) / 4294967295.0f * 8.0f;
-
-                float height;
-
-                if (fracX + fracZ <= 1.0f) {
-                    float weightA = 1.0f - fracX - fracZ;
-                    float weightB = fracZ;
-                    float weightC = fracX;
-
-                    height = A * weightA + B * weightB + C * weightC;
-                }
-                else {
-                    float weightB = 1.0f - fracX;
-                    float weightD = fracX + fracZ - 1.0f;
-                    float weightC = 1.0f - fracZ;
-
-                    height = B * weightB + D * weightD + C * weightC;
-                }
+                float height = getHeight(vertex_pos.x, vertex_pos.z);
 
                 heights[i * resolution + j] = height;
 

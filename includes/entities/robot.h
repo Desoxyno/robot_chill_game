@@ -3,33 +3,37 @@
 #include "core/models.h"
 #include "math/vectors.h"
 #include "utils/random.h"
+#include "world/terrain.h"
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <raylib.h>
 #include <raymath.h>
 
+
+
 class Robot : public GameObject{
     public:
-        customMath::Vector3 target_pos = {0, 0, 25};
+        customMath::HorizontalVec2 target_pos = {0, 0};
 
-        float speed = 5;
-        float turning_speed = 90; // In Degrees / s
+        uint8_t speed = 5;
+        uint8_t turning_speed = 90.0f; // In Degrees / s
 
-        float distance = 1;
+        uint8_t distance = 1;
 
-        float terrain_width;
-
-        float wander_radius = 100;
+        uint8_t wander_radius = 100;
 
         float angle = 0;
 
-        float floor_offset = 0.5;
-
-        Mesh* floor_mesh;
+        float floor_offset = 0.08;
 
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        Robot(float terrain_width, Mesh* floor_mesh) : GameObject(&robot, {2500, 0, 2500}, 0), terrain_width(terrain_width), floor_mesh(floor_mesh) {}
+        TerrainGeneration terrain_gen;
+
+        Robot(Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
+
+        Mesh* floor_mesh;
 
         void UpdateAngle(float dt, float target_angle) {
                 float delta = target_angle - angle;
@@ -44,26 +48,23 @@ class Robot : public GameObject{
 
 
         void checkGravity() {
-            Ray ray = {raylib_vec(position - customMath::Vector3{0, floor_offset, 0}), {0, -1, 0}};
-            RayCollision ray_collide = GetRayCollisionMesh(ray, *floor_mesh, MatrixIdentity());
-            float error = floor_offset - ray_collide.distance;
-            if (!ray_collide.hit) {return;}
-            else {position.y += error;}
+            position.y = terrain_gen.getHeight(position.x, position.z) + floor_offset;
         }
 
         void Draw() override {
             DrawModelEx(*model, raylib_vec(position), raylib_vec({0, 1, 0}), angle, {12, 12, 12}, WHITE);
-            DrawModelEx(*model, raylib_vec(target_pos + customMath::Vector3{0, 3, 0}), raylib_vec({0, 1, 0}), angle, {1, 1, 1}, {255, 0, 0, 120});
+            DrawModelEx(*model, {target_pos.x, position.y, target_pos.z}, raylib_vec({0, 1, 0}), angle, {1, 1, 1}, {255, 0, 0, 120});
         }
 
         void Update() override {
+            checkGravity();
             
-            if (customMath::magnitude(target_pos - position) < distance) {
-                target_pos = {position.x + generate_n(-wander_radius, wander_radius), 0, position.z + generate_n(-wander_radius, wander_radius)};
+            if (customMath::magnitude(customMath::Vector3{target_pos.x, position.y, target_pos.z} - position) < distance) {
+                target_pos = {position.x + generate_n(-wander_radius, wander_radius), position.z + generate_n(-wander_radius, wander_radius)};
             }
             else {
 
-                customMath::Vector3 direction = target_pos - position;
+                customMath::Vector3 direction = customMath::Vector3{target_pos.x, position.y, target_pos.z} - position;
                 float dt = GetFrameTime();
                 float target_angle = (atan2(direction.x, direction.z) * RAD2DEG) - (PI/2 * RAD2DEG);
 
@@ -80,8 +81,6 @@ class Robot : public GameObject{
                 direction.z *= (speed * dt);
 
                 position += direction;
-
-                checkGravity();
 
                 }
 
