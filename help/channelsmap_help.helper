@@ -1,8 +1,0 @@
-| Channel | Utilisation    | Plage                       |
-| ------: | -------------- | --------------------------- |
-|    0    | Position   X   |  chunk.min.x → chunk.max.x  |
-|    1    | Position   Z   |  chunk.min.z → chunk.max.z  |
-|    2    | Rotation   Y   |  -180 → 180                 |
-|    3    | Scale   X      |  1 → 2                      |
-|    4    | Scale   Y      |  1 → 2                      |
-|    5    | Scale   Z      |  1 → 2                      |
