@@ -19,6 +19,8 @@ uniform sampler2D terrainHeightmap;
 
 uniform uint hash;
 
+const float pi = 3.14159265358979323846;
+
 uint hash32(uint value)
 {
     uint x = value;
@@ -36,6 +38,18 @@ float random01(uint index, uint channel, uint hash)
     uint hashed = hash32(to_hash);
 
     return float(hashed) / 4294967295.0;
+}
+
+float fastSin(float x){
+    x = mod(x + pi, pi * 2) - pi; // restrict x so that -M_PI < x < M_PI
+    const float B = 4.0f/pi;
+    const float C = -4.0f/(pi*pi);
+
+    float y = B * x + C * x * abs(x);
+
+    const float P = 0.225f;
+
+    return P * (y * abs(y) - y) + y; 
 }
 
 void main()
@@ -104,7 +118,7 @@ void main()
     localPosition.z *= scaleZ;
 
     float c = cos(rotationY);
-    float s = sin(rotationY);
+    float s = fastSin(rotationY);
 
     float rotatedX = localPosition.x * c - localPosition.z * s;
     float rotatedZ = localPosition.x * s + localPosition.z * c;

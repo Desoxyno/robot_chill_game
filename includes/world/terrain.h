@@ -15,18 +15,17 @@
 #include "frustrum_culling.h"
 #include "utils/eco.h"
 
+struct GrassInstance {
+    uint random_seed;
+};
+
 struct ChunkCPU
 {
     EcoBoundingBox box = {};
     uint32_t seed = 0;
     uint8_t current_LOD = 0;
     bool visible = false;
-};
-
-struct ChunkGPU
-{
-    EcoBoundingBox box = {};
-    uint32_t seed = 0;
+    std::vector<GrassInstance> instances;
 };
 
 class TerrainGeneration {
@@ -193,6 +192,8 @@ class TerrainGeneration {
 
                 new_chunk.seed = hash32(50 + cx * 73856093u + cz * 19349663u);
 
+                new_chunk.instances.push_back(GrassInstance(2154242)); // Test
+
                 chunks.push_back(new_chunk);
 
                 }
@@ -206,6 +207,8 @@ class Terrain
 {
 public:
     customMath::Vector3 position = {0, 0, 0};
+    customMath::Vector3 sunDirection = {0.5, -1.0, 0.3};
+    float sun_intensity = 10;
 
     Model grass_model_near;
     Model grass_model_far;
