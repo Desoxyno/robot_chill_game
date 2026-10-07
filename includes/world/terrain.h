@@ -23,12 +23,6 @@ struct ChunkCPU
     bool visible = false;
 };
 
-struct ChunkGPU
-{
-    EcoBoundingBox box = {};
-    uint32_t seed = 0;
-};
-
 class TerrainGeneration {
     public:
 
@@ -49,6 +43,8 @@ class TerrainGeneration {
 
    
     std::vector<ChunkCPU> chunks;
+
+    float height;
 
     float getHeight(float x, float z) {
         float gx = x / 100.0f;
@@ -75,8 +71,6 @@ class TerrainGeneration {
         float C = float(hashC) / 4294967295.0f * 8.0f;
         float D = float(hashD) / 4294967295.0f * 8.0f;
 
-        float height;
-
         if (fracX + fracZ <= 1.0f) {
             float weightA = 1.0f - fracX - fracZ;
             float weightB = fracZ;
@@ -97,10 +91,13 @@ class TerrainGeneration {
 
     void GenerateTerrainMesh() {
         std::vector<Vector3> vertex_array;
+        vertex_array.reserve(resolution * resolution);
+
         std::vector<float> heights;
         heights.resize(resolution * resolution);
+
         std::vector<unsigned short> indices_array;
-        vertex_array.reserve(resolution * resolution);
+        
         Vector3 vertex_pos = {0, 0, 0};
         float spacing = float(width) / (resolution - 1);
         Mesh new_mesh = { 0 };
@@ -165,7 +162,6 @@ class TerrainGeneration {
         GenerateTerrainMesh();
 
         unsigned int terrainMinX = 0;
-
         unsigned int terrainMinZ = 0;
 
         for (int cz = 0; cz < chunkZ; cz++)
@@ -399,7 +395,6 @@ public:
 
             SetShaders(instancing_shader, chunk, mvp, 1, windTime, false);
 
-            
             rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, 800 * 60);
             
 
