@@ -10,11 +10,14 @@
 #include <raylib.h>
 #include <raymath.h>
 
-
+#include "procedural_movement.h"
+#include "robot_legs_data.h"
 
 class Robot : public GameObject{
     public:
         customMath::HorizontalVec2 target_pos = {0, 0};
+
+        RobotLeg left_leg = RobotLeg(joints, lengths, followDistance);
 
         uint8_t speed = 5;
         uint8_t turning_speed = 90.0f; // In Degrees / s
@@ -54,9 +57,11 @@ class Robot : public GameObject{
         void Draw() override {
             DrawModelEx(*model, raylib_vec(position), raylib_vec({0, 1, 0}), angle, {12, 12, 12}, WHITE);
             DrawModelEx(*model, {target_pos.x, position.y, target_pos.z}, raylib_vec({0, 1, 0}), angle, {1, 1, 1}, {255, 0, 0, 120});
+            left_leg.Draw();
         }
 
         void Update() override {
+            left_leg.Update(raylib_vec(position));
             checkGravity();
             
             if (customMath::magnitude(customMath::Vector3{target_pos.x, position.y, target_pos.z} - position) < distance) {

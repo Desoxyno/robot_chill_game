@@ -55,6 +55,8 @@ inline const float magnitude(const Vector3 &vector) {
     return sqrt(pow(vector.x, 2) + pow(vector.y, 2) + pow(vector.z, 2));
 }
 
+
+
 class Vector4 {
     public:
         float x, y, z, w;
