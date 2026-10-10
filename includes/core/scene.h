@@ -28,7 +28,7 @@ class Scene {
         void Tick(Model &skybox) {
             float f_start = GetTime();
             Update();
-            Draw(skybox, cpu_frame_time, terrain->gpu_frame_time);
+            Draw(skybox, cpu_frame_time);
             cpu_frame_time = GetTime() - f_start;
         }
 
@@ -47,7 +47,7 @@ class Scene {
             scene_objects.push_back(std::move(to_add));
         }
 
-        void Draw(Model &skybox, float cpu_frame_time, float gpu_frame_time) {
+        void Draw(Model &skybox, float cpu_frame_time) {
             BeginDrawing();
 
             BeginMode3D(player->camera.camera);
@@ -75,7 +75,7 @@ class Scene {
             DrawText(("LOD2:" + std::to_string(terrain->chunks_draw_LOD2)).c_str(), 10, 105, 25, WHITE);
             DrawText(("LOD3:" + std::to_string(terrain->chunks_draw_LOD3)).c_str(), 10, 130, 25, WHITE);
             DrawText(("CPU frame time: " + std::to_string(cpu_frame_time * 1000) + "ms").c_str(), 10, 155, 25, WHITE);
-            DrawText(("GPU frame time: " + std::to_string(gpu_frame_time * 1000) + "ms").c_str(), 10, 180, 25, WHITE);
+            // DrawText(("GPU frame time: " + std::to_string(gpu_frame_time * 1000) + "ms").c_str(), 10, 180, 25, WHITE);
 
             DrawFPS(10, 10);
 
