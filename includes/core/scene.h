@@ -17,7 +17,6 @@ class Scene {
         std::vector<std::unique_ptr<GameObject>> scene_objects;
         float cpu_frame_time = 0.0f;
         
-        
     public:
         std::unique_ptr<Terrain> terrain;
 

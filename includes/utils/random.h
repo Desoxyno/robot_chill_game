@@ -4,6 +4,7 @@
 #include <random>
 #include <hash_fun.h>
 #include <raymath.h>
+#include <sys/types.h>
 
 inline std::random_device rd;  
 inline std::mt19937 gene(rd());
@@ -28,7 +29,7 @@ inline const uint32_t hash32(const uint32_t value) {
         return x;
 }
 
-inline const float generate_dn(const unsigned int &seed, const unsigned int &index, const int &channel, const float &min, const float &max) {      
+inline const float generate_dn(const uint &seed, const uint &index, const int &channel, const float &min, const float &max) {      
         uint32_t x = hash32(seed);
         x ^= index;
         x = hash32(x);

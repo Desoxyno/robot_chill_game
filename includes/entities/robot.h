@@ -16,16 +16,16 @@ class Robot : public GameObject{
     public:
         customMath::HorizontalVec2 target_pos = {0, 0};
 
-        uint8_t speed = 5;
-        uint8_t turning_speed = 90.0f; // In Degrees / s
+        const uint8_t speed = 5;
+        const uint8_t turning_speed = 90.0f; // In Degrees / s
 
-        uint8_t distance = 1;
+        const uint8_t distance = 1;
 
-        uint8_t wander_radius = 100;
+        const uint8_t wander_radius = 100;
+
+        const float floor_offset = 0.08;
 
         float angle = 0;
-
-        float floor_offset = 0.08;
 
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
