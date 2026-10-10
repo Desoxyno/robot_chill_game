@@ -35,6 +35,9 @@ class Robot : public GameObject{
         TerrainGeneration terrain_gen;
 
         Robot(Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
+        ~Robot() {
+            UnloadModel(robot);
+        }
 
         Mesh* floor_mesh;
 
@@ -61,8 +64,9 @@ class Robot : public GameObject{
         }
 
         void Update() override {
-            left_leg.Update(raylib_vec(position));
             checkGravity();
+            customMath::Vector3 anchor_point = {-5, 10, 0};
+            left_leg.Update(position, anchor_point);
             
             if (customMath::magnitude(customMath::Vector3{target_pos.x, position.y, target_pos.z} - position) < distance) {
                 target_pos = {position.x + generate_n(-wander_radius, wander_radius), position.z + generate_n(-wander_radius, wander_radius)};
