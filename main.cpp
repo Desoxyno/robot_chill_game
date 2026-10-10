@@ -19,8 +19,8 @@ int main() {
 
     
     std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>(Terrain({0, 0, 0}));
-    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, &test_terrain->terrain_gen.floor, test_terrain->terrain_gen));
-    Robot robot = Robot(&test_terrain->terrain_gen.floor, test_terrain->terrain_gen);
+    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, test_terrain->terrain_gen));
+    Robot robot = Robot(test_terrain->terrain_gen);
 
     Scene test_map = Scene(std::move(player), std::move(test_terrain));
 

@@ -10,8 +10,6 @@
 #include <raylib.h>
 #include <raymath.h>
 
-
-
 class Robot : public GameObject{
     public:
         customMath::HorizontalVec2 target_pos = {0, 0};
@@ -29,11 +27,9 @@ class Robot : public GameObject{
 
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        TerrainGeneration terrain_gen;
+        TerrainGeneration &terrain_gen;
 
-        Robot(Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
-
-        Mesh* floor_mesh;
+        Robot(TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), terrain_gen(terrain_gen) {}
 
         void UpdateAngle(float dt, float target_angle) {
                 float delta = target_angle - angle;
