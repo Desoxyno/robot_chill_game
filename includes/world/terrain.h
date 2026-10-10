@@ -15,13 +15,13 @@
 #include "frustrum_culling.h"
 #include "utils/eco.h"
 
-struct ChunkCPU
+typedef struct ChunkCPU
 {
     EcoBoundingBox box = {};
     uint32_t seed = 0;
     uint8_t current_LOD = 0;
     bool visible = false;
-};
+} Chunk;
 
 class TerrainGeneration {
     public:
@@ -35,14 +35,14 @@ class TerrainGeneration {
 
     Mesh floor;
 
-    TerrainGeneration(float width, float chunkSize, unsigned int resolution) : width(width), chunkSize(chunkSize), resolution(resolution) {
+    std::vector<Chunk> chunks;
+
+    TerrainGeneration(uint width, uint chunkSize, uint resolution) : width(width), chunkSize(chunkSize), resolution(resolution) {
             chunkX = ceil(width / chunkSize);
             chunkZ = ceil(width / chunkSize);
+            chunks.reserve(chunkX * chunkZ);
             GenerateTerrain();
     }
-
-   
-    std::vector<ChunkCPU> chunks;
 
     float height;
 
@@ -90,6 +90,7 @@ class TerrainGeneration {
     }
 
     void GenerateTerrainMesh() {
+        double start_time = GetTime();
         std::vector<Vector3> vertex_array;
         vertex_array.reserve(resolution * resolution);
 
@@ -155,10 +156,14 @@ class TerrainGeneration {
         floor = new_mesh;
 
         heightmap = rlLoadTexture(heights.data(), resolution, resolution, RL_PIXELFORMAT_UNCOMPRESSED_R32, 1);
+
+        double time_taken = (GetTime() - start_time) * 1000.0;
+        TraceLog(LOG_INFO, "Time took to generate terrain mesh : %.2f ms", time_taken);
     }
 
     void GenerateTerrain()
     {
+        double start_time = GetTime();
         GenerateTerrainMesh();
 
         unsigned int terrainMinX = 0;
@@ -168,7 +173,7 @@ class TerrainGeneration {
         {
             for (int cx = 0; cx < chunkX; cx++)
             {
-                ChunkCPU new_chunk;
+                Chunk new_chunk;
 
                 new_chunk.box.min.x = int16_t(
                     terrainMinX + cx * chunkSize);
@@ -194,6 +199,8 @@ class TerrainGeneration {
                 }
 
         }
+        double time_taken = (GetTime() - start_time) * 1000.0;
+        TraceLog(LOG_INFO, "Time took to generate terrain : %.2f ms", time_taken);
          
     }
 };
@@ -296,7 +303,7 @@ public:
         SetShaderValueTexture(instancing_shader_far, heights_loc, h_map);
     }
 
-    const float GetDistance(const ChunkCPU& chunk, const Camera3D& camera) const {
+    const float GetDistance(const Chunk& chunk, const Camera3D& camera) const {
             float centreX = (float(chunk.box.min.x) + float(chunk.box.max.x)) / 2;
 
             float centreY = (float(chunk.box.min.y) + float(chunk.box.max.y)) / 2;
@@ -314,7 +321,7 @@ public:
             return distance;
     }
 
-    void SetShaders(const Shader& shader, const ChunkCPU &chunk, const Matrix &mvp, const int &step, const float &windTime, const bool &far) {
+    void SetShaders(const Shader& shader, const Chunk &chunk, const Matrix &mvp, const int &step, const float &windTime, const bool &far) {
             if (!far) {
                 SetShaderValue(shader, windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
             }
@@ -371,10 +378,8 @@ public:
         Matrix mvp = MatrixMultiply(view_matrix, projection_matrix);
 
         Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
-
-        rlDisableBackfaceCulling();
+        
         DrawMesh(terrain_gen.floor, terrain_material, floor_transform);
-        rlEnableBackfaceCulling();
 
         float start_time = GetTime();
 

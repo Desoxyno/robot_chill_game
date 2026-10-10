@@ -16,7 +16,7 @@ uniform uint instanceStride;
 flat out float variation;
 out float grassheight;
 
-out float baseX;
+float baseX;
 
 uniform sampler2D terrainHeightmap;
 

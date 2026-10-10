@@ -14,8 +14,8 @@ class PlayerCam {
         double pitch = 0;
 
         PlayerCam() {
-            camera.target = Vector3{0, 0, 0};
-            camera.up = Vector3{0, 1, 0};
+            camera.target = {0, 0, 0};
+            camera.up = {0, 1, 0};
             camera.fovy = 45;
             camera.projection = CAMERA_PERSPECTIVE;
         }
