@@ -9,7 +9,9 @@
 int main() {
 
     SetConfigFlags( FLAG_MSAA_4X_HINT);
+    SetTraceLogLevel(LOG_WARNING);
     InitWindow(1280, 720, "Game");
+    
     
     Config conf = Config("config/config.cfg");
 
@@ -18,9 +20,9 @@ int main() {
     Shader cloud_shader = LoadShader(conf.getRESpath("shader_skybox_vs").c_str(), conf.getRESpath("shader_skybox_fs").c_str());
 
     
-    std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>(Terrain({0, 0, 0}));
-    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, &test_terrain->terrain_gen.floor, test_terrain->terrain_gen));
-    Robot robot = Robot(&test_terrain->terrain_gen.floor, test_terrain->terrain_gen);
+    std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>();
+    std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, &test_terrain->data.ground));
+    Robot robot = Robot(&test_terrain->data.ground);
 
     Scene test_map = Scene(std::move(player), std::move(test_terrain));
 

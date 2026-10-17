@@ -12,14 +12,12 @@ class Player : public GameObject {
     public:
         PlayerCam camera;
 
-        Player(Model &model, customMath::Vector3 position, float rotation_y, Mesh* floor_mesh, TerrainGeneration &terrain_gen) : 
-        GameObject(&model, position, rotation_y), camera(PlayerCam()), floor_mesh(floor_mesh), terrain_gen(terrain_gen) 
+        Player(Model &model, customMath::Vector3 position, float rotation_y, Mesh* floor_mesh) : 
+        GameObject(&model, position, rotation_y), camera(PlayerCam()), floor_mesh(floor_mesh)
         {size = 1;}
 
         float movement_speed = 1;
         float floor_offset = 0.15;
-
-        TerrainGeneration terrain_gen;
 
         Mesh* floor_mesh;
 
@@ -36,7 +34,7 @@ class Player : public GameObject {
         }
 
         void checkGravity() {
-            position.y = terrain_gen.getHeight(position.x, position.z) + floor_offset;
+            position.y = getHeight(position.x, position.z) + floor_offset;
         }
 
         void UpdCam() {

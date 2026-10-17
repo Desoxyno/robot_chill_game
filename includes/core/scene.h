@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <raylib.h>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -67,14 +66,6 @@ class Scene {
             }
 
             EndMode3D();
-
-            DrawText(("Chunks visibles:" + std::to_string(terrain->chunks_visible) + "/" + std::to_string(terrain->terrain_gen.chunks.size())).c_str(), 10, 30, 25, WHITE);
-            DrawText(("LOD0:" + std::to_string(terrain->chunks_draw_LOD0)).c_str(), 10, 55, 25, WHITE);
-            DrawText(("LOD1:" + std::to_string(terrain->chunks_draw_LOD1)).c_str(), 10, 80, 25, WHITE);
-            DrawText(("LOD2:" + std::to_string(terrain->chunks_draw_LOD2)).c_str(), 10, 105, 25, WHITE);
-            DrawText(("LOD3:" + std::to_string(terrain->chunks_draw_LOD3)).c_str(), 10, 130, 25, WHITE);
-            DrawText(("CPU frame time: " + std::to_string(cpu_frame_time * 1000) + "ms").c_str(), 10, 155, 25, WHITE);
-            // DrawText(("GPU frame time: " + std::to_string(gpu_frame_time * 1000) + "ms").c_str(), 10, 180, 25, WHITE);
 
             DrawFPS(10, 10);
 

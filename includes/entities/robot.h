@@ -29,9 +29,7 @@ class Robot : public GameObject{
 
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        TerrainGeneration terrain_gen;
-
-        Robot(Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
+        Robot(Mesh* floor_mesh) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh) {}
 
         Mesh* floor_mesh;
 
@@ -48,7 +46,7 @@ class Robot : public GameObject{
 
 
         void checkGravity() {
-            position.y = terrain_gen.getHeight(position.x, position.z) + floor_offset;
+            position.y = getHeight(position.x, position.z) + floor_offset;
         }
 
         void Draw() override {
