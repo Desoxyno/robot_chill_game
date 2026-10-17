@@ -17,7 +17,6 @@ int main() {
     Texture2D sky = LoadTexture(conf.getRESpath("texture_stars").c_str());
     Shader cloud_shader = LoadShader(conf.getRESpath("shader_skybox_vs").c_str(), conf.getRESpath("shader_skybox_fs").c_str());
 
-    
     std::unique_ptr<Terrain> test_terrain = std::make_unique<Terrain>(Terrain({0, 0, 0}));
     std::unique_ptr<Player> player = std::make_unique<Player>(Player(player_model, {2500, 50, 2500}, 0, &test_terrain->terrain_gen.floor, test_terrain->terrain_gen));
     Robot robot = Robot(&test_terrain->terrain_gen.floor, test_terrain->terrain_gen);
@@ -27,7 +26,6 @@ int main() {
     Mesh sphere = GenMeshSphere(100.0f, 100.0f, 100.0f);
     Model skybox = LoadModelFromMesh(sphere);
     
-
     skybox.materials[0].shader = cloud_shader;
     skybox.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = sky;
 

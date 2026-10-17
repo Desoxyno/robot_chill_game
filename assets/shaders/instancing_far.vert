@@ -1,7 +1,6 @@
 #version 330
 
 in vec3 vertexPosition;
-in vec2 vertexTexCoord;
 
 uniform mat4 mvp;
 uniform int minx;
@@ -10,14 +9,12 @@ uniform int minz;
 uniform int maxz;
 uniform float windTime;
 
-flat out float variation;
-out float grassheight;
-
-out float baseX;
-
 uniform sampler2D terrainHeightmap;
 
 uniform uint hash;
+in vec3 vertexNormal;
+
+out vec3 fragNormal;
 
 const float pi = 3.14159265358979323846;
 
@@ -58,8 +55,6 @@ void main()
 
     uint instanceIndex = uint(gl_InstanceID);
 
-    variation = 0.8 + random01(instanceIndex, 5u, hash);
-
     float x = float(minx) + random01(instanceIndex, 0u, hash) * float(maxx - minx);
     float z = float(minz) + random01(instanceIndex, 1u, hash) * float(maxz - minz);
 
@@ -71,8 +66,6 @@ void main()
 
     float fracX = fract(gridx);
     float fracZ = fract(gridz);
-
-    baseX = baseXValue;
 
     int texX = int(baseZ);
     int texY = int(baseXValue);
@@ -112,6 +105,8 @@ void main()
 
     vec3 localPosition = vertexPosition;
 
+    float grassheight = clamp(vertexPosition.y, 0.0, 1.0);
+
     localPosition.y = height + vertexPosition.y * scaleY;
 
     localPosition.x *= scaleX;
@@ -126,8 +121,6 @@ void main()
     localPosition.x = rotatedX;
     localPosition.z = rotatedZ;
 
-    grassheight = clamp(vertexPosition.y, 0.0, 1.0);
-
     localPosition.x += 0.12 * grassheight * grassheight;
     localPosition.z += 0.03 * grassheight * grassheight;
 
@@ -135,6 +128,13 @@ void main()
 
     worldPosition.x += x;
     worldPosition.z += z;
+
+    vec3 normal;
+    normal.x = vertexNormal.x * c - vertexNormal.z * s;
+    normal.y = vertexNormal.y;
+    normal.z = vertexNormal.x * s + vertexNormal.z * c;
+
+    fragNormal = normalize(normal);
 
     gl_Position = mvp * vec4(worldPosition, 1.0);
 }
