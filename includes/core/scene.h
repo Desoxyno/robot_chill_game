@@ -9,6 +9,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef DEBUG_BUILD
+    #include <iostream>
+#endif
+
 class Scene {
 
     private:
@@ -68,6 +72,10 @@ class Scene {
             EndMode3D();
 
             DrawFPS(10, 10);
+
+            #ifdef DEBUG_BUILD
+                std::cout << "CPU Frame Time : " << cpu_frame_time << "s" << std::endl;
+            #endif
 
             EndDrawing();
                 

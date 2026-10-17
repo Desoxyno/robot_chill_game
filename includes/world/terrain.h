@@ -12,7 +12,10 @@
 #include "utils/random.h"
 #include "frustrum_culling.h"
 #include "utils/eco.h"
-#include "../timer.h"
+
+#ifdef DEBUG_BUILD
+    #include "../timer.h"
+#endif
 
 typedef struct Chunk
 {
@@ -199,7 +202,6 @@ typedef struct TerrainRenderer
     Model grass_model_farthest = LoadModel("assets/grass/grass_LOD3.glb");;
 
     Shader instancing_shader = LoadShader("assets/shaders/instancing.vert", "assets/shaders/instancing.frag");
-    Shader instancing_shader_far = LoadShader("assets/shaders/instancing_far.vert", "assets/shaders/instancing.frag");;
 
     Shader terrain_shader = LoadShader("assets/shaders/terrain.vert", "assets/shaders/terrain.frag");
 
@@ -230,7 +232,6 @@ typedef struct TerrainRenderer
         rlActiveTextureSlot(1);
         rlEnableTexture(data->heightmap);
         SetShaderValueTexture(instancing_shader, heights_loc, h_map);
-        SetShaderValueTexture(instancing_shader_far, heights_loc, h_map);
         terrain_material.shader = terrain_shader;
     }
 
@@ -273,20 +274,17 @@ typedef struct Terrain {
         {
             chunk.visible = !IsBoxOutsideFrustum(chunk.box, camera_frustum);
             if (chunk.visible) {
-                uint32_t distance = GetDistance(chunk, camera);
+                float distance = GetDistance(chunk, camera);
                 if (distance < 250 * 250) {chunk.current_LOD = 0;}
                 else if (distance < 600 * 600) {chunk.current_LOD = 1;}
                 else if (distance < 1000 * 1000) {chunk.current_LOD = 2;}
                 else if (distance < 2000 * 2000) {chunk.current_LOD = 3;}
-                else {chunk.current_LOD = 4;}
+                else [[likely]] {chunk.current_LOD = 4;}
             }
         }
     }
 
-    void chunkSetShaders(const Shader& shader, const Chunk &chunk, const Matrix &mvp, const int &step, const float &windTime, const bool &far) {
-            if (!far) {
-                SetShaderValue(shader, renderer.windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
-            }
+    void chunkSetShaders(const Shader& shader, const Chunk &chunk, const Matrix &mvp, const int &step, const float &windTime) {
 
             int tempMiX = int(chunk.box.min.x);
             int tempMaX = int(chunk.box.max.x);
@@ -304,8 +302,8 @@ typedef struct Terrain {
 
     void Draw(const Camera3D& camera)
     {
-        unsigned int grass_vaoId = renderer.grass_model_near.meshes[0].vaoId;
-        unsigned int grass_tri_count = renderer.grass_model_near.meshes[0].triangleCount;
+        unsigned int grass_vaoId = 0;
+        unsigned int grass_tri_count = 0;
 
         float windTime = static_cast<float>(GetTime());
 
@@ -318,35 +316,18 @@ typedef struct Terrain {
         
         DrawMesh(data.ground, renderer.terrain_material, floor_transform);
 
+        SetShaderValueMatrix(renderer.instancing_shader, renderer.mvp_loc, mvp);
+        SetShaderValue(renderer.instancing_shader, renderer.windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
+
         BeginShaderMode(renderer.instancing_shader);
 
-        SetShaderValueMatrix(renderer.instancing_shader, renderer.mvp_loc, mvp);
-        SetShaderValueMatrix(renderer.instancing_shader_far, renderer.mvp_loc, mvp);
-
-        rlEnableVertexArray(grass_vaoId);
-
         for (auto& chunk : data.chunks)
         {
-            if (!chunk.visible || chunk.current_LOD != 0)
-                continue;
-
-            chunkSetShaders(renderer.instancing_shader, chunk, mvp, 1, windTime, false);
-
-            rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, 800 * 60);
             
-
-        }
-
-        rlDisableVertexArray();
-
-        EndShaderMode();
-
-        BeginShaderMode(renderer.instancing_shader_far);
-
-        for (auto& chunk : data.chunks)
-        {
-            if (!chunk.visible || chunk.current_LOD == 0 || chunk.current_LOD == 4)
+            if (!chunk.visible || chunk.current_LOD == 4)
                 continue;
+
+            [[assume(chunk.current_LOD < 4)]];
 
             Mesh* grass_mesh;
 
@@ -355,30 +336,38 @@ typedef struct Terrain {
             u_int8_t multiplicator = 0;
 
             switch (chunk.current_LOD) {
+                case 0:
+                    step = 1;
+                    grass = 800;
+                    multiplicator = 20;
+                    grass_mesh = &renderer.grass_model_near.meshes[0];
+                    break;
                 case 1: 
                     step = 2;
                     grass = 600;
-                    multiplicator = 8;
+                    multiplicator = 13;
                     grass_mesh = &renderer.grass_model_far.meshes[0];
                     break;
                 case 2:
                     step = 4;
                     grass = 400;
-                    multiplicator = 7;
+                    multiplicator = 10;
                     grass_mesh = &renderer.grass_model_very_far.meshes[0];
                     break;
                 case 3:
                     step = 8;
                     grass = 50;
-                    multiplicator = 6;
+                    multiplicator = 5;
                     grass_mesh = &renderer.grass_model_farthest.meshes[0];
                     break;
             }
 
+            [[assume(grass_mesh != nullptr)]];
+
             unsigned int grass_vaoId = grass_mesh->vaoId;
             unsigned int grass_tri_count = grass_mesh->triangleCount;
 
-            chunkSetShaders(renderer.instancing_shader_far, chunk, mvp, step, windTime, true);
+            chunkSetShaders(renderer.instancing_shader, chunk, mvp, 1, windTime);
 
             rlEnableVertexArray(grass_vaoId);
             rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, grass * multiplicator);

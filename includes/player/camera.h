@@ -22,8 +22,8 @@ class PlayerCam {
 
         void Update(customMath::Vector3 target_position) {
             distance += -GetMouseWheelMove();
-            if (distance > 25) {distance = 25;}
-            if (distance < 1) {distance = 1;}
+            if (distance > 25) [[unlikely]] {distance = 25;}
+            if (distance < 1) [[unlikely]] {distance = 1;}
 
             yaw += GetMouseDelta().x / 10;
             
