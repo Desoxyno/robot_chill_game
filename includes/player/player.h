@@ -12,7 +12,11 @@ class Player : public GameObject {
     public:
         PlayerCam camera;
 
-        Player(Model &model, customMath::Vector3 position, float rotation_y, TerrainGeneration &terrain_gen) : GameObject(&model, position, rotation_y), camera(PlayerCam()), terrain_gen(terrain_gen) {}
+        Model player_model = LoadModel("assets/player/bean.glb");
+
+        Player(TerrainGeneration &terrain_gen) : GameObject(nullptr, {2500, 50, 2500}, 0), camera(PlayerCam()), terrain_gen(terrain_gen) {
+            model = &player_model;
+        }
 
         float movement_speed = 1;
         float floor_offset = 0.15;

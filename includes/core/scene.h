@@ -17,15 +17,16 @@ class Scene {
         std::vector<std::unique_ptr<GameObject>> scene_objects;
         float cpu_frame_time = 0.0f;
         
-        
     public:
         std::unique_ptr<Terrain> terrain;
 
         std::unique_ptr<Player> player;
 
-        Scene(std::unique_ptr<Player> player, std::unique_ptr<Terrain> terrain) : player(std::move(player)), terrain(std::move(terrain)) {}
+        Model &skybox;
 
-        void Tick(Model &skybox) {
+        Scene(std::unique_ptr<Player> player, std::unique_ptr<Terrain> terrain, Model &skybox) : player(std::move(player)), terrain(std::move(terrain)), skybox(skybox) {}
+
+        void Tick() {
             float f_start = GetTime();
             Update();
             Draw(skybox, cpu_frame_time, terrain->gpu_frame_time);

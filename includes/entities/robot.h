@@ -56,7 +56,7 @@ class Robot : public GameObject{
             checkGravity();
             
             if (customMath::magnitude(customMath::Vector3{target_pos.x, position.y, target_pos.z} - position) < distance) {
-                target_pos = {position.x + generate_n(-wander_radius, wander_radius), position.z + generate_n(-wander_radius, wander_radius)};
+                target_pos = {position.x + generate_ni(-wander_radius, wander_radius), position.z + generate_ni(-wander_radius, wander_radius)};
             }
             else {
 
