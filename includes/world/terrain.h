@@ -20,7 +20,6 @@
 typedef struct Chunk
 {
     EcoBoundingBox box = {};
-    uint32_t seed = 0;
     uint8_t current_LOD = 0;
     bool visible = false;
 } Chunk;
@@ -31,10 +30,11 @@ typedef struct TerrainData {
     unsigned int heightmap = 0;
     unsigned int chunkSize = 55;
     unsigned int chunkX = ceil(width / chunkSize);
-    unsigned int chunkZ = ceil(width / chunkSize);
+    unsigned int chunkZ = ceil(float(width) / float(chunkSize));
     Mesh ground;
 
     std::vector<Chunk> chunks;
+    uint32_t seeds_buffer[8281];
 
 } TerrainData;
 
@@ -184,9 +184,9 @@ inline void GenerateTerrain(TerrainData &data) {
 
             new_chunk.box.max.y = 8;
 
-            new_chunk.seed = hash32(50 + cx * 73856093u + cz * 19349663u);
-
             data.chunks.push_back(new_chunk);
+
+            data.seeds_buffer[cx * data.chunkX + cz] = hash32(50 + cx * 73856093u + cz * 19349663u);;
 
             }
         }
@@ -195,6 +195,8 @@ inline void GenerateTerrain(TerrainData &data) {
 typedef struct TerrainRenderer
 {
     TerrainData *data = nullptr;
+
+     Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
 
     Model grass_model_near = LoadModel("assets/grass/grass_LOD0.glb");
     Model grass_model_far = LoadModel("assets/grass/grass_LOD1.glb");
@@ -206,6 +208,8 @@ typedef struct TerrainRenderer
     Shader terrain_shader = LoadShader("assets/shaders/terrain.vert", "assets/shaders/terrain.frag");
 
     Material terrain_material = LoadMaterialDefault();
+
+    unsigned int seeds_ssbo = 0;
 
     int seed_loc = GetShaderLocation(instancing_shader, "chunkSeed");
     int minx_loc = GetShaderLocation(instancing_shader, "minx");
@@ -219,8 +223,10 @@ typedef struct TerrainRenderer
 
     Texture2D h_map{};
 
-    void initialize(TerrainData &data) {
+    void Initialize(TerrainData &data) {
         this->data = &data;
+
+        seeds_ssbo = rlLoadShaderBuffer(sizeof(data.seeds_buffer), data.seeds_buffer, RL_STATIC_COPY);
         setShaders();
         h_map = Texture2D(this->data->heightmap, this->data->resolution, this->data->resolution, 1, RL_PIXELFORMAT_UNCOMPRESSED_R32);
     }
@@ -263,7 +269,7 @@ typedef struct Terrain {
 
     Terrain() {
         GenerateTerrain(data);
-        renderer.initialize(data);
+        renderer.Initialize(data);
     }
 
     void Update(Camera3D& camera)
@@ -279,7 +285,7 @@ typedef struct Terrain {
                 else if (distance < 600 * 600) {chunk.current_LOD = 1;}
                 else if (distance < 1000 * 1000) {chunk.current_LOD = 2;}
                 else if (distance < 2000 * 2000) {chunk.current_LOD = 3;}
-                else [[likely]] {chunk.current_LOD = 4;}
+                else [[likely]] {chunk.visible = false;}
             }
         }
     }
@@ -291,7 +297,6 @@ typedef struct Terrain {
             int tempMiZ = int(chunk.box.min.z);
             int tempMaZ = int(chunk.box.max.z);
             
-            SetShaderValue(shader, renderer.seed_loc, &chunk.seed, SHADER_UNIFORM_UINT);
             SetShaderValue(shader, renderer.minx_loc, &tempMiX, SHADER_UNIFORM_INT);
             SetShaderValue(shader, renderer.maxx_loc, &tempMaX, SHADER_UNIFORM_INT);
             SetShaderValue(shader, renderer.minz_loc, &tempMiZ, SHADER_UNIFORM_INT);
@@ -311,23 +316,22 @@ typedef struct Terrain {
         Matrix projection_matrix = rlGetMatrixProjection();
 
         Matrix mvp = MatrixMultiply(view_matrix, projection_matrix);
-
-        Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
         
-        DrawMesh(data.ground, renderer.terrain_material, floor_transform);
+        DrawMesh(data.ground, renderer.terrain_material, renderer.floor_transform);
 
         SetShaderValueMatrix(renderer.instancing_shader, renderer.mvp_loc, mvp);
         SetShaderValue(renderer.instancing_shader, renderer.windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
+        rlBindShaderBuffer(renderer.seeds_ssbo, 0);
 
         BeginShaderMode(renderer.instancing_shader);
 
         for (auto& chunk : data.chunks)
         {
             
-            if (!chunk.visible || chunk.current_LOD == 4)
+            if (!chunk.visible)
                 continue;
 
-            [[assume(chunk.current_LOD < 4)]];
+            [[assume(chunk.current_LOD <= 3)]];
 
             Mesh* grass_mesh;
 

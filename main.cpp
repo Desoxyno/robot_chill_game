@@ -9,6 +9,7 @@
 int main() {
 
     SetConfigFlags( FLAG_MSAA_4X_HINT);
+    SetConfigFlags( FLAG_WINDOW_HIGHDPI);
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(1280, 720, "Game");
     
