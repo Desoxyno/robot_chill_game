@@ -30,7 +30,6 @@ int main() {
     Mesh sphere = GenMeshSphere(100.0f, 100.0f, 100.0f);
     Model skybox = LoadModelFromMesh(sphere);
     
-
     skybox.materials[0].shader = cloud_shader;
     skybox.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = sky;
 

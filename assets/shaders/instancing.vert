@@ -1,7 +1,6 @@
 #version 430
 
 in vec3 vertexPosition;
-in vec2 vertexTexCoord;
 
 uniform mat4 mvp;
 uniform int minx;
@@ -43,10 +42,23 @@ float random01(uint index, uint channel, uint hash)
     return float(hashed) / 4294967295.0;
 }
 
+float fastSin(float x)
+{
+    x = mod(x + pi, pi * 2.0) - pi;
+
+    const float B = 4.0 / pi;
+    const float C = -4.0 / (pi * pi);
+
+    float y = B * x + C * x * abs(x);
+
+    const float P = 0.225;
+
+    return P * (y * abs(y) - y) + y;
+}
+
 void main()
 {
-    float offset = 0;
-    float spacing = float(5000) / 254.0;
+    float spacing = 5000.0 / 254.0;
 
     
     uint instanceIndex = uint(gl_InstanceID);
@@ -67,18 +79,35 @@ void main()
     float fracX = fract(gridx);
     float fracZ = fract(gridz);
 
-    baseX = baseXValue;
-
     int texX = int(baseZ);
     int texY = int(baseXValue);
 
     texX = clamp(texX, 0, 253);
     texY = clamp(texY, 0, 253);
 
-    float A = texelFetch(terrainHeightmap, ivec2(texX, texY), 0).r;
-    float B = texelFetch(terrainHeightmap, ivec2(texX + 1, texY), 0).r;
-    float C = texelFetch(terrainHeightmap, ivec2(texX, texY + 1), 0).r;
-    float D = texelFetch(terrainHeightmap, ivec2(texX + 1, texY + 1), 0).r;
+    float A = texelFetch(
+        terrainHeightmap,
+        ivec2(texX, texY),
+        0
+    ).r;
+
+    float B = texelFetch(
+        terrainHeightmap,
+        ivec2(texX + 1, texY),
+        0
+    ).r;
+
+    float C = texelFetch(
+        terrainHeightmap,
+        ivec2(texX, texY + 1),
+        0
+    ).r;
+
+    float D = texelFetch(
+        terrainHeightmap,
+        ivec2(texX + 1, texY + 1),
+        0
+    ).r;
 
     float height;
 
@@ -88,7 +117,9 @@ void main()
         float weightB = fracZ;
         float weightC = fracX;
 
-        height = A * weightA + B * weightB + C * weightC;
+        height = A * weightA
+               + B * weightB
+               + C * weightC;
     }
     else
     {
@@ -96,48 +127,99 @@ void main()
         float weightD = fracX + fracZ - 1.0;
         float weightC = 1.0 - fracZ;
 
-        height = B * weightB + D * weightD + C * weightC;
+        height = B * weightB
+               + D * weightD
+               + C * weightC;
     }
 
-    height -= offset;
+    float rotationY =
+        random01(instanceIndex, 2u, hash)
+        * 6.28318530718;
 
-    float rotationY = random01(instanceIndex, 2u, hash) * 6.28318530718;
+    float scaleX =
+        1.0 + random01(instanceIndex, 3u, hash);
 
-    float scaleX = 1.0 + random01(instanceIndex, 3u, hash);
-    float scaleY = 1.0 + random01(instanceIndex, 4u, hash);
-    float scaleZ = 1.0 + random01(instanceIndex, 5u, hash);
+    float scaleY =
+        1.0 + random01(instanceIndex, 4u, hash);
+
+    float scaleZ =
+        1.0 + random01(instanceIndex, 5u, hash);
 
     vec3 localPosition = vertexPosition;
 
-    localPosition.y = height + vertexPosition.y * scaleY;
+    float grassheight =
+        clamp(vertexPosition.y, 0.0, 1.0);
+
+    localPosition.y =
+        height + vertexPosition.y * scaleY;
 
     localPosition.x *= scaleX;
     localPosition.z *= scaleZ;
 
     float c = cos(rotationY);
-    float s = sin(rotationY);
+    float s = fastSin(rotationY);
 
-    float rotatedX = localPosition.x * c - localPosition.z * s;
-    float rotatedZ = localPosition.x * s + localPosition.z * c;
+    float rotatedX =
+        localPosition.x * c
+        - localPosition.z * s;
+
+    float rotatedZ =
+        localPosition.x * s
+        + localPosition.z * c;
 
     localPosition.x = rotatedX;
     localPosition.z = rotatedZ;
 
-    grassheight = clamp(vertexPosition.y, 0.0, 1.0);
+    float wind =
+        fastSin(
+            windTime * 2.0
+            + localPosition.x * 0.18
+            + localPosition.z * 0.12
+        );
 
-    float wind = sin(windTime * 2.0 + localPosition.x * 0.18 + localPosition.z * 0.12);
-
-    float detail = sin(windTime * 3.5 + localPosition.x * 0.55 + localPosition.z * 0.45) * 0.25;
+    float detail =
+        fastSin(
+            windTime * 3.5
+            + localPosition.x * 0.55
+            + localPosition.z * 0.45
+        ) * 0.25;
 
     float movement = wind + detail;
 
-    localPosition.x += movement * 0.12 * grassheight * grassheight;
-    localPosition.z += movement * 0.03 * grassheight * grassheight;
+    localPosition.x +=
+        movement * 0.12
+        * grassheight
+        * grassheight;
+
+    localPosition.z +=
+        movement * 0.03
+        * grassheight
+        * grassheight;
 
     vec3 worldPosition = localPosition;
 
     worldPosition.x += x;
     worldPosition.z += z;
 
-    gl_Position = mvp * vec4(worldPosition, 1.0);
+    vec3 normal = vertexNormal;
+
+    normal.x /= scaleX;
+    normal.y /= scaleY;
+    normal.z /= scaleZ;
+
+    float normalX =
+        normal.x * c
+        - normal.z * s;
+
+    float normalZ =
+        normal.x * s
+        + normal.z * c;
+
+    normal.x = normalX;
+    normal.z = normalZ;
+
+    fragNormal = normalize(normal);
+
+    gl_Position =
+        mvp * vec4(worldPosition, 1.0);
 }
