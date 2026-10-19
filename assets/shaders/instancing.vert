@@ -1,10 +1,9 @@
-#version 330
+#version 430
 
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;
 
 uniform mat4 mvp;
-uniform uint chunkSeed;
 uniform int minx;
 uniform int maxx;
 uniform int minz;
@@ -16,9 +15,14 @@ uniform uint instanceStride;
 flat out float variation;
 out float grassheight;
 
-out float baseX;
+float baseX;
 
 uniform sampler2D terrainHeightmap;
+
+layout(std430, binding = 0) buffer Seeds
+{
+    uint seeds[];
+};
 
 uint hash32(uint value)
 {
@@ -44,8 +48,10 @@ void main()
     float offset = 0;
     float spacing = float(5000) / 254.0;
 
-    uint hash = hash32(chunkSeed);
+    
     uint instanceIndex = uint(gl_InstanceID);
+
+    uint hash = hash32(seeds[instanceIndex]);
 
     variation = 0.8 + random01(instanceIndex, 5u, hash);
 

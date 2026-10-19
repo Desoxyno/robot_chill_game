@@ -14,16 +14,16 @@ class PlayerCam {
         double pitch = 0;
 
         PlayerCam() {
-            camera.target = Vector3{0, 0, 0};
-            camera.up = Vector3{0, 1, 0};
+            camera.target = {0, 0, 0};
+            camera.up = {0, 1, 0};
             camera.fovy = 45;
             camera.projection = CAMERA_PERSPECTIVE;
         }
 
         void Update(customMath::Vector3 target_position) {
             distance += -GetMouseWheelMove();
-            if (distance > 25) {distance = 25;}
-            if (distance < 1) {distance = 1;}
+            if (distance > 25) [[unlikely]] {distance = 25;}
+            if (distance < 1) [[unlikely]] {distance = 1;}
 
             yaw += GetMouseDelta().x / 10;
             
