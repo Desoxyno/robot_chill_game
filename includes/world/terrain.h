@@ -17,12 +17,17 @@
     #include "../timer.h"
 #endif
 
-typedef struct Chunk
+constexpr uint8_t VISIBLE = 1 << 0;
+constexpr uint8_t LOD_MASK = 0b00000110;
+
+struct Chunk
 {
     EcoBoundingBox box = {};
-    uint8_t current_LOD = 0;
-    bool visible = false;
-} Chunk;
+    uint8_t flags = 0;
+};
+
+static_assert(sizeof(Chunk) <= 14);
+static_assert(sizeof(MicroVector3) == 4);
 
 typedef struct TerrainData {
     unsigned int resolution = 255;
@@ -241,8 +246,6 @@ typedef struct TerrainRenderer
         terrain_material.shader = terrain_shader;
     }
 
-
-    
 } TerrainRenderer;
 
 constexpr float GetDistance(const Chunk& chunk, const Camera3D& camera) {
@@ -278,14 +281,19 @@ typedef struct Terrain {
 
         for (auto& chunk : data.chunks)
         {
-            chunk.visible = !IsBoxOutsideFrustum(chunk.box, camera_frustum);
-            if (chunk.visible) {
+            if (!IsBoxOutsideFrustum(chunk.box, camera_frustum))
+                chunk.flags |= VISIBLE;
+            else chunk.flags &= ~VISIBLE;
+
+            bool visible = chunk.flags & VISIBLE;
+            if (visible) {
+                
                 float distance = GetDistance(chunk, camera);
-                if (distance < 250 * 250) {chunk.current_LOD = 0;}
-                else if (distance < 600 * 600) {chunk.current_LOD = 1;}
-                else if (distance < 1000 * 1000) {chunk.current_LOD = 2;}
-                else if (distance < 2000 * 2000) {chunk.current_LOD = 3;}
-                else [[likely]] {chunk.visible = false;}
+                if (distance < 250 * 250) {chunk.flags = (chunk.flags & ~LOD_MASK) | (0 << 1);}
+                else if (distance < 600 * 600) {chunk.flags = (chunk.flags & ~LOD_MASK) | (1 << 1);}
+                else if (distance < 1000 * 1000) {chunk.flags = (chunk.flags & ~LOD_MASK) | (2 << 1);}
+                else if (distance < 2000 * 2000) {chunk.flags = (chunk.flags & ~LOD_MASK) | (3 << 1);}
+                else [[likely]] {chunk.flags &= ~VISIBLE;}
             }
         }
     }
@@ -307,8 +315,6 @@ typedef struct Terrain {
 
     void Draw(const Camera3D& camera)
     {
-        unsigned int grass_vaoId = 0;
-        unsigned int grass_tri_count = 0;
 
         float windTime = static_cast<float>(GetTime());
 
@@ -328,10 +334,8 @@ typedef struct Terrain {
         for (auto& chunk : data.chunks)
         {
             
-            if (!chunk.visible)
+            if ((chunk.flags & VISIBLE) == 0)
                 continue;
-
-            [[assume(chunk.current_LOD <= 3)]];
 
             Mesh* grass_mesh;
 
@@ -339,7 +343,7 @@ typedef struct Terrain {
             u_int16_t grass = 0;
             u_int8_t multiplicator = 0;
 
-            switch (chunk.current_LOD) {
+            switch ((chunk.flags & LOD_MASK) >> 1) {
                 case 0:
                     step = 1;
                     grass = 800;

@@ -6,6 +6,10 @@
 #include "entities/robot.h"
 #include "utils/config.h"
 
+#ifdef DEBUG_BUILD
+    #include "utils/performance_mesurer.h"
+#endif
+
 int main() {
 
     SetConfigFlags( FLAG_MSAA_4X_HINT);
@@ -45,6 +49,8 @@ int main() {
         test_map.Tick(skybox);
 
     }
+
+    ShowData();
 
     CloseWindow();
 

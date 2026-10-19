@@ -11,6 +11,8 @@
 
 #ifdef DEBUG_BUILD
     #include <iostream>
+    #include <chrono>
+    #include "utils/performance_mesurer.h"
 #endif
 
 class Scene {
@@ -28,10 +30,18 @@ class Scene {
         Scene(std::unique_ptr<Player> player, std::unique_ptr<Terrain> terrain) : player(std::move(player)), terrain(std::move(terrain)) {}
 
         void Tick(Model &skybox) {
-            float f_start = GetTime();
+            #ifdef DEBUG_BUILD
+                const auto start = std::chrono::steady_clock::now();
+            #endif
+
             Update();
-            Draw(skybox, cpu_frame_time);
-            cpu_frame_time = GetTime() - f_start;
+            Draw(skybox);
+
+            #ifdef DEBUG_BUILD
+                const auto elapsed = std::chrono::steady_clock::now() - start;
+                cpu_frame_time = std::chrono::duration<float>(elapsed).count();
+            #endif
+
         }
 
         void Update() {
@@ -49,7 +59,7 @@ class Scene {
             scene_objects.push_back(std::move(to_add));
         }
 
-        void Draw(Model &skybox, float cpu_frame_time) {
+        void Draw(Model &skybox) {
             BeginDrawing();
 
             BeginMode3D(player->camera.camera);
@@ -65,7 +75,7 @@ class Scene {
             player->Draw();
             terrain->Draw(player->camera.camera);
 
-            for (auto& object : scene_objects) {
+            for (auto &object : scene_objects) {
                 object->Draw();
             }
 
@@ -74,10 +84,28 @@ class Scene {
             DrawFPS(10, 10);
 
             #ifdef DEBUG_BUILD
-                std::cout << "CPU Frame Time : " << cpu_frame_time << "s" << std::endl;
+                std::cout << "CPU Frame Time : " << cpu_frame_time * 1000 << "ms" << std::endl;
+                frame_ms_measures.push_back(cpu_frame_time);
             #endif
 
             EndDrawing();
                 
         }
+
+        ~Scene() {
+            UnloadModel(*player->model);
+
+            UnloadModel(terrain->renderer.grass_model_near);
+            UnloadModel(terrain->renderer.grass_model_far);
+            UnloadModel(terrain->renderer.grass_model_very_far);
+            UnloadModel(terrain->renderer.grass_model_farthest);
+
+            UnloadMesh(terrain->data.ground);
+
+            for (auto &model : scene_objects) {
+                UnloadModel(*model->model);
+            }
+
+        }
+
 };
