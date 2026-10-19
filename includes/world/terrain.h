@@ -1,7 +1,5 @@
 #pragma once
 
-#include "math/vectors.h"
-
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -15,408 +13,329 @@
 #include "frustrum_culling.h"
 #include "utils/eco.h"
 
-struct ChunkCPU
+#ifdef DEBUG_BUILD
+    #include "../timer.h"
+#endif
+
+constexpr uint8_t VISIBLE = 1 << 0;
+constexpr uint8_t LOD_MASK = 0b00000110;
+
+struct Chunk
 {
     EcoBoundingBox box = {};
-    uint32_t seed = 0;
-    uint8_t current_LOD = 0;
-    bool visible = false;
+    uint8_t flags = 0;
 };
 
-struct ChunkGPU
-{
-    EcoBoundingBox box = {};
-    uint32_t seed = 0;
-};
+static_assert(sizeof(Chunk) <= 14);
+static_assert(sizeof(MicroVector3) == 4);
 
-class TerrainGeneration {
-    public:
+typedef struct TerrainData {
+    unsigned int resolution = 255;
+    unsigned int width = 5000;
+    unsigned int heightmap = 0;
+    unsigned int chunkSize = 55;
+    unsigned int chunkX = ceil(width / chunkSize);
+    unsigned int chunkZ = ceil(float(width) / float(chunkSize));
+    Mesh ground;
 
-    unsigned int resolution;
-    unsigned int width;
-    unsigned int heightmap;
-    unsigned int chunkSize;
-    unsigned int chunkX;
-    unsigned int chunkZ;
+    std::vector<Chunk> chunks;
+    uint32_t seeds_buffer[8281];
 
-    Mesh floor;
+} TerrainData;
 
-    TerrainGeneration(float width, float chunkSize, unsigned int resolution) : width(width), chunkSize(chunkSize), resolution(resolution) {
-            chunkX = ceil(width / chunkSize);
-            chunkZ = ceil(width / chunkSize);
-            GenerateTerrain();
+constexpr float getHeight(float x, float z) {
+    float gx = x / 100.0f;
+    float gz = z / 100.0f;
+
+    int cellX = int(std::floor(gx));
+    int cellZ = int(std::floor(gz));
+
+    float fracX = gx - std::floor(gx);
+    float fracZ = gz - std::floor(gz);
+
+    uint hashA = uint(cellX) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+    uint hashB = uint(cellX) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+    uint hashC = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
+    uint hashD = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
+
+    hashA = hash32(hashA);
+    hashB = hash32(hashB);
+    hashC = hash32(hashC);
+    hashD = hash32(hashD);
+
+    float A = float(hashA) / 4294967295.0f * 8.0f;
+    float B = float(hashB) / 4294967295.0f * 8.0f;
+    float C = float(hashC) / 4294967295.0f * 8.0f;
+    float D = float(hashD) / 4294967295.0f * 8.0f;
+
+    float height;
+
+    if (fracX + fracZ <= 1.0f) {
+        float weightA = 1.0f - fracX - fracZ;
+        float weightB = fracZ;
+        float weightC = fracX;
+
+        height = A * weightA + B * weightB + C * weightC;
     }
 
-   
-    std::vector<ChunkCPU> chunks;
+    else {
+        float weightB = 1.0f - fracX;
+        float weightD = fracX + fracZ - 1.0f;
+        float weightC = 1.0f - fracZ;
 
-    float getHeight(float x, float z) {
-        float gx = x / 100.0f;
-        float gz = z / 100.0f;
-
-        int cellX = int(std::floor(gx));
-        int cellZ = int(std::floor(gz));
-
-        float fracX = gx - std::floor(gx);
-        float fracZ = gz - std::floor(gz);
-
-        uint hashA = uint(cellX) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
-        uint hashB = uint(cellX) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
-        uint hashC = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ) * 0x23e8f9cu;
-        uint hashD = uint(cellX + 1) * 0x45d9f3bu + uint(cellZ + 1) * 0x23e8f9cu;
-
-        hashA = hash32(hashA);
-        hashB = hash32(hashB);
-        hashC = hash32(hashC);
-        hashD = hash32(hashD);
-
-        float A = float(hashA) / 4294967295.0f * 8.0f;
-        float B = float(hashB) / 4294967295.0f * 8.0f;
-        float C = float(hashC) / 4294967295.0f * 8.0f;
-        float D = float(hashD) / 4294967295.0f * 8.0f;
-
-        float height;
-
-        if (fracX + fracZ <= 1.0f) {
-            float weightA = 1.0f - fracX - fracZ;
-            float weightB = fracZ;
-            float weightC = fracX;
-
-            height = A * weightA + B * weightB + C * weightC;
-        }
-
-        else {
-            float weightB = 1.0f - fracX;
-            float weightD = fracX + fracZ - 1.0f;
-            float weightC = 1.0f - fracZ;
-
-            height = B * weightB + D * weightD + C * weightC;
-                }
-        return height;
-    }
-
-    void GenerateTerrainMesh() {
-        std::vector<Vector3> vertex_array;
-        std::vector<float> heights;
-        heights.resize(resolution * resolution);
-        std::vector<unsigned short> indices_array;
-        vertex_array.reserve(resolution * resolution);
-        Vector3 vertex_pos = {0, 0, 0};
-        float spacing = float(width) / (resolution - 1);
-        Mesh new_mesh = { 0 };
-
-        for (uint16_t i = 0; i < resolution; i++) {
-            for (uint16_t j = 0; j < resolution; j++) {
-                vertex_pos = {(i * spacing), 0, (j * spacing)};
-
-                float height = getHeight(vertex_pos.x, vertex_pos.z);
-
-                heights[i * resolution + j] = height;
-
-                vertex_pos.y = height;
-
-                vertex_array.push_back(vertex_pos);
+        height = B * weightB + D * weightD + C * weightC;
             }
+    return height;
+}
+
+inline void GenerateTerrainMesh(TerrainData &data) {
+    std::vector<Vector3> vertex_array;
+    vertex_array.reserve(data.resolution * data.resolution);
+
+    std::vector<float> heights;
+    heights.resize(data.resolution * data.resolution);
+
+    std::vector<unsigned short> indices_array;
+        
+    Vector3 vertex_pos = {0, 0, 0};
+    float spacing = float(data.width) / (data.resolution - 1);
+    Mesh new_mesh = { 0 };
+
+    for (uint16_t i = 0; i < data.resolution; i++) {
+        for (uint16_t j = 0; j < data.resolution; j++) {
+            vertex_pos = {(i * spacing), 0, (j * spacing)};
+
+            float height = getHeight(vertex_pos.x, vertex_pos.z);
+
+            heights[i * data.resolution + j] = height;
+
+            vertex_pos.y = height;
+
+            vertex_array.push_back(vertex_pos);
         }
-
-        for (uint16_t i = 0; i < resolution - 1; i++) {
-            for (uint16_t j = 0; j < resolution - 1; j++) {
-                uint32_t a = i * resolution + j;
-                uint32_t b = a + 1;
-                uint32_t c = (i + 1) * resolution + j;
-                uint32_t d = c + 1;
-
-                indices_array.push_back(a);
-                indices_array.push_back(b);
-                indices_array.push_back(c);
-
-                indices_array.push_back(b);
-                indices_array.push_back(d);
-                indices_array.push_back(c);
-            }
-        }
-
-        new_mesh.triangleCount = indices_array.size() / 3;
-        new_mesh.vertexCount = vertex_array.size();
-
-        std::vector<float> c_vertex_array;
-
-        for (auto vec : vertex_array) {
-            c_vertex_array.push_back(vec.x);
-            c_vertex_array.push_back(vec.y);
-            c_vertex_array.push_back(vec.z);
-        }
-
-        new_mesh.vertices = (float*)MemAlloc(c_vertex_array.size() * sizeof(float));
-        memcpy(new_mesh.vertices, c_vertex_array.data(), c_vertex_array.size() * sizeof(float));
-
-        new_mesh.indices = (unsigned short*)MemAlloc(indices_array.size() * sizeof(unsigned short));
-        memcpy(new_mesh.indices, indices_array.data(), indices_array.size() * sizeof(unsigned short));
-
-        UploadMesh(&new_mesh, false);
-
-        floor = new_mesh;
-
-        heightmap = rlLoadTexture(heights.data(), resolution, resolution, RL_PIXELFORMAT_UNCOMPRESSED_R32, 1);
     }
 
-    void GenerateTerrain()
+    for (uint16_t i = 0; i < data.resolution - 1; i++) {
+        for (uint16_t j = 0; j < data.resolution - 1; j++) {
+            uint32_t a = i * data.resolution + j;
+            uint32_t b = a + 1;
+            uint32_t c = (i + 1) * data.resolution + j;
+            uint32_t d = c + 1;
+
+            indices_array.push_back(a);
+            indices_array.push_back(b);
+            indices_array.push_back(c);
+
+            indices_array.push_back(b);
+            indices_array.push_back(d);
+            indices_array.push_back(c);
+        }
+    }
+
+    new_mesh.triangleCount = indices_array.size() / 3;
+    new_mesh.vertexCount = vertex_array.size();
+
+    std::vector<float> c_vertex_array;
+
+    for (auto vec : vertex_array) {
+        c_vertex_array.push_back(vec.x);
+        c_vertex_array.push_back(vec.y);
+        c_vertex_array.push_back(vec.z);
+    }
+
+    new_mesh.vertices = (float*)MemAlloc(c_vertex_array.size() * sizeof(float));
+    memcpy(new_mesh.vertices, c_vertex_array.data(), c_vertex_array.size() * sizeof(float));
+
+    new_mesh.indices = (unsigned short*)MemAlloc(indices_array.size() * sizeof(unsigned short));
+    memcpy(new_mesh.indices, indices_array.data(), indices_array.size() * sizeof(unsigned short));
+
+    UploadMesh(&new_mesh, false);
+
+    data.ground = new_mesh;
+
+    data.heightmap = rlLoadTexture(heights.data(), data.resolution, data.resolution, RL_PIXELFORMAT_UNCOMPRESSED_R32, 1);
+}
+
+inline void GenerateTerrain(TerrainData &data) {
+    #ifdef DEBUG_BUILD
+        measure(GenerateTerrainMesh, data, "GenerateTerrainMesh");
+    #else
+        GenerateTerrainMesh(data);
+    #endif
+
+    unsigned int terrainMinX = 0;
+    unsigned int terrainMinZ = 0;
+
+    for (int cz = 0; cz < data.chunkZ; cz++)
     {
-        GenerateTerrainMesh();
-
-        unsigned int terrainMinX = 0;
-
-        unsigned int terrainMinZ = 0;
-
-        for (int cz = 0; cz < chunkZ; cz++)
+        for (int cx = 0; cx < data.chunkX; cx++)
         {
-            for (int cx = 0; cx < chunkX; cx++)
-            {
-                ChunkCPU new_chunk;
+            Chunk new_chunk;
 
-                new_chunk.box.min.x = int16_t(
-                    terrainMinX + cx * chunkSize);
+            new_chunk.box.min.x = int16_t(
+                terrainMinX + cx * data.chunkSize);
 
-                new_chunk.box.min.z = int16_t(
-                    terrainMinZ + cz * chunkSize);
+            new_chunk.box.min.z = int16_t(
+                terrainMinZ + cz * data.chunkSize);
 
 
-                new_chunk.box.max.x = int16_t(
-                    new_chunk.box.min.x + chunkSize);
+            new_chunk.box.max.x = int16_t(
+                new_chunk.box.min.x + data.chunkSize);
 
-                new_chunk.box.max.z = int16_t(
-                    new_chunk.box.min.z + chunkSize);
+            new_chunk.box.max.z = int16_t(
+                new_chunk.box.min.z + data.chunkSize);
 
-                new_chunk.box.min.y = 0;
+            new_chunk.box.min.y = 0;
 
-                new_chunk.box.max.y = 8;
+            new_chunk.box.max.y = 8;
 
-                new_chunk.seed = hash32(50 + cx * 73856093u + cz * 19349663u);
+            data.chunks.push_back(new_chunk);
 
-                chunks.push_back(new_chunk);
+            data.seeds_buffer[cx * data.chunkX + cz] = hash32(50 + cx * 73856093u + cz * 19349663u);;
 
-                }
-
+            }
         }
-         
-    }
-};
+}
 
-class Terrain
+typedef struct TerrainRenderer
 {
-public:
-    customMath::Vector3 position = {0, 0, 0};
+    TerrainData *data = nullptr;
 
-    Model grass_model_near;
-    Model grass_model_far;
-    Model grass_model_very_far;
-    Model grass_model_farthest;
+     Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
 
-    Shader instancing_shader;
-    Shader instancing_shader_far;
+    Model grass_model_near = LoadModel("assets/grass/grass_LOD0.glb");
+    Model grass_model_far = LoadModel("assets/grass/grass_LOD1.glb");
+    Model grass_model_very_far = LoadModel("assets/grass/grass_LOD2.glb");;
+    Model grass_model_farthest = LoadModel("assets/grass/grass_LOD3.glb");;
 
-    Shader terrain_shader;
+    Shader instancing_shader = LoadShader("assets/shaders/instancing.vert", "assets/shaders/instancing.frag");
+
+    Shader terrain_shader = LoadShader("assets/shaders/terrain.vert", "assets/shaders/terrain.frag");
 
     Material terrain_material = LoadMaterialDefault();
 
-    float gpu_frame_time = 0;
+    unsigned int seeds_ssbo = 0;
 
-    int windTimeLoc = -1;
+    int seed_loc = GetShaderLocation(instancing_shader, "chunkSeed");
+    int minx_loc = GetShaderLocation(instancing_shader, "minx");
+    int maxx_loc = GetShaderLocation(instancing_shader, "maxx");
+    int minz_loc = GetShaderLocation(instancing_shader, "minz");
+    int maxz_loc = GetShaderLocation(instancing_shader, "maxz");
+    int stride_loc = GetShaderLocation(instancing_shader, "instanceStride");
+    int heights_loc = GetShaderLocation(instancing_shader, "terrainHeightmap");
+    int mvp_loc = GetShaderLocation(instancing_shader, "mvp");
+    int windTimeLoc = GetShaderLocation(instancing_shader, "windTime");
 
-    int seed_loc = -1;
+    Texture2D h_map{};
 
-    int minx_loc = -1;
-    int maxx_loc = -1;
-    int minz_loc = -1;
-    int maxz_loc = -1;
-    int stride_loc = -1;
-    int heights_loc = -1;
+    void Initialize(TerrainData &data) {
+        this->data = &data;
 
-    int mvp_loc = -1;
+        seeds_ssbo = rlLoadShaderBuffer(sizeof(data.seeds_buffer), data.seeds_buffer, RL_STATIC_COPY);
+        setShaders();
+        h_map = Texture2D(this->data->heightmap, this->data->resolution, this->data->resolution, 1, RL_PIXELFORMAT_UNCOMPRESSED_R32);
+    }
 
-    unsigned int chunks_visible = 0;
-
-    unsigned int chunks_draw_LOD0 = 0;
-    unsigned int chunks_draw_LOD1 = 0;
-    unsigned int chunks_draw_LOD2 = 0;
-    unsigned int chunks_draw_LOD3 = 0;
-
-    TerrainGeneration terrain_gen = TerrainGeneration(5000, 55, 255);
-
-    Texture2D h_map = Texture2D(terrain_gen.heightmap, terrain_gen.resolution, terrain_gen.resolution, 1, RL_PIXELFORMAT_UNCOMPRESSED_R32);
-
-    Terrain(customMath::Vector3 position)
-        : position(position)
-    {
-
-        grass_model_near =
-            LoadModel("assets/grass/grass_LOD0.glb");
-
-        grass_model_far =
-            LoadModel("assets/grass/grass_LOD1.glb");
-
-        grass_model_very_far =
-            LoadModel("assets/grass/grass_LOD2.glb");
-
-        grass_model_farthest =
-            LoadModel("assets/grass/grass_LOD3.glb");
-
-        instancing_shader =
-            LoadShader(
-                "assets/shaders/instancing.vert",
-                "assets/shaders/instancing.frag"
-            );
-
-        instancing_shader_far =
-            LoadShader(
-                "assets/shaders/instancing_far.vert",
-                "assets/shaders/instancing.frag"
-            );
-
-        terrain_shader = LoadShader("assets/shaders/terrain.vert", "assets/shaders/terrain.frag");
-        terrain_material.shader = terrain_shader;
-
-        seed_loc = GetShaderLocation(instancing_shader, "chunkSeed");
-
-        minx_loc = GetShaderLocation(instancing_shader, "minx");
-        maxx_loc = GetShaderLocation(instancing_shader, "maxx");
-        minz_loc = GetShaderLocation(instancing_shader, "minz");
-        maxz_loc = GetShaderLocation(instancing_shader, "maxz");
-        stride_loc = GetShaderLocation(instancing_shader, "instanceStride");
-        heights_loc = GetShaderLocation(instancing_shader, "terrainHeightmap");
-
-        mvp_loc = GetShaderLocation(instancing_shader, "mvp");
-
+    void setShaders() {
         instancing_shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(instancing_shader, "mvp");
         terrain_shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(terrain_shader, "mvp");
-
         instancing_shader.locs[SHADER_LOC_VERTEX_POSITION] = GetShaderLocationAttrib(instancing_shader, "vertexPosition");
-
-        windTimeLoc = GetShaderLocation(instancing_shader, "windTime");
-
         rlActiveTextureSlot(1);
-        rlEnableTexture(terrain_gen.heightmap);
+        rlEnableTexture(data->heightmap);
         SetShaderValueTexture(instancing_shader, heights_loc, h_map);
-        SetShaderValueTexture(instancing_shader_far, heights_loc, h_map);
+        terrain_material.shader = terrain_shader;
     }
 
-    const float GetDistance(const ChunkCPU& chunk, const Camera3D& camera) const {
-            float centreX = (float(chunk.box.min.x) + float(chunk.box.max.x)) / 2;
+} TerrainRenderer;
 
-            float centreY = (float(chunk.box.min.y) + float(chunk.box.max.y)) / 2;
+constexpr float GetDistance(const Chunk& chunk, const Camera3D& camera) {
+    float centreX = (float(chunk.box.min.x) + float(chunk.box.max.x)) / 2;
 
-            float centreZ = (float(chunk.box.min.z) + float(chunk.box.max.z)) / 2;
+    float centreY = (float(chunk.box.min.y) + float(chunk.box.max.y)) / 2;
 
+    float centreZ = (float(chunk.box.min.z) + float(chunk.box.max.z)) / 2;
 
-            float distance =
-                (camera.position.x - centreX) * (camera.position.x - centreX)
-                +
-                (camera.position.y - centreY) * (camera.position.y - centreY)
-                +
-                (camera.position.z - centreZ) * (camera.position.z - centreZ);
+    float distance =
+        (camera.position.x - centreX) * (camera.position.x - centreX)
+        +
+        (camera.position.y - centreY) * (camera.position.y - centreY)
+        +
+        (camera.position.z - centreZ) * (camera.position.z - centreZ);
 
-            return distance;
-    }
+    return distance;
+}
 
-    void SetShaders(const Shader& shader, const ChunkCPU &chunk, const Matrix &mvp, const int &step, const float &windTime, const bool &far) {
-            if (!far) {
-                SetShaderValue(shader, windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
-            }
+typedef struct Terrain {
+    TerrainData data;
 
-            int tempMiX = int(chunk.box.min.x);
-            int tempMaX = int(chunk.box.max.x);
-            int tempMiZ = int(chunk.box.min.z);
-            int tempMaZ = int(chunk.box.max.z);
-            
-            SetShaderValue(shader, seed_loc, &chunk.seed, SHADER_UNIFORM_UINT);
-            SetShaderValue(shader, minx_loc, &tempMiX, SHADER_UNIFORM_INT);
-            SetShaderValue(shader, maxx_loc, &tempMaX, SHADER_UNIFORM_INT);
-            SetShaderValue(shader, minz_loc, &tempMiZ, SHADER_UNIFORM_INT);
-            SetShaderValue(shader, maxz_loc, &tempMaZ, SHADER_UNIFORM_INT);
+    TerrainRenderer renderer;
 
-            SetShaderValue(shader, stride_loc, &step, SHADER_UNIFORM_UINT);
+    Terrain() {
+        GenerateTerrain(data);
+        renderer.Initialize(data);
     }
 
     void Update(Camera3D& camera)
     {
         Frustum camera_frustum = GetFrustum(camera);
 
-        for (auto& chunk : terrain_gen.chunks)
+        for (auto& chunk : data.chunks)
         {
-            chunk.visible = !IsBoxOutsideFrustum(chunk.box, camera_frustum);
-            if (chunk.visible) {
-                uint32_t distance = GetDistance(chunk, camera);
-                if (distance < 250 * 250) {chunk.current_LOD = 0;}
-                else if (distance < 600 * 600) {chunk.current_LOD = 1;}
-                else if (distance < 1000 * 1000) {chunk.current_LOD = 2;}
-                else if (distance < 2000 * 2000) {chunk.current_LOD = 3;}
-                else {chunk.current_LOD = 4;}
+            if (!IsBoxOutsideFrustum(chunk.box, camera_frustum))
+                chunk.flags |= VISIBLE;
+            else chunk.flags &= ~VISIBLE;
+
+            bool visible = chunk.flags & VISIBLE;
+            if (visible) {
+                
+                float distance = GetDistance(chunk, camera);
+                if (distance < 250 * 250) {chunk.flags = (chunk.flags & ~LOD_MASK) | (0 << 1);}
+                else if (distance < 600 * 600) {chunk.flags = (chunk.flags & ~LOD_MASK) | (1 << 1);}
+                else if (distance < 1000 * 1000) {chunk.flags = (chunk.flags & ~LOD_MASK) | (2 << 1);}
+                else if (distance < 2000 * 2000) {chunk.flags = (chunk.flags & ~LOD_MASK) | (3 << 1);}
+                else [[likely]] {chunk.flags &= ~VISIBLE;}
+            }
         }
     }
 
+    void chunkSetShaders(const Shader& shader, const Chunk &chunk, const Matrix &mvp, const int &step, const float &windTime) {
+
+            int tempMiX = int(chunk.box.min.x);
+            int tempMaX = int(chunk.box.max.x);
+            int tempMiZ = int(chunk.box.min.z);
+            int tempMaZ = int(chunk.box.max.z);
+            
+            SetShaderValue(shader, renderer.minx_loc, &tempMiX, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, renderer.maxx_loc, &tempMaX, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, renderer.minz_loc, &tempMiZ, SHADER_UNIFORM_INT);
+            SetShaderValue(shader, renderer.maxz_loc, &tempMaZ, SHADER_UNIFORM_INT);
+
+            SetShaderValue(shader, renderer.stride_loc, &step, SHADER_UNIFORM_UINT);
     }
 
     void Draw(const Camera3D& camera)
     {
-        unsigned int grass_vaoId = grass_model_near.meshes[0].vaoId;
-        unsigned int grass_tri_count = grass_model_near.meshes[0].triangleCount;
 
         float windTime = static_cast<float>(GetTime());
-
-        chunks_visible = 0;
-        chunks_draw_LOD0 = 0;
-        chunks_draw_LOD1 = 0;
-        chunks_draw_LOD2 = 0;
-        chunks_draw_LOD3 = 0;
 
         Matrix view_matrix = rlGetMatrixModelview();
         Matrix projection_matrix = rlGetMatrixProjection();
 
         Matrix mvp = MatrixMultiply(view_matrix, projection_matrix);
+        
+        DrawMesh(data.ground, renderer.terrain_material, renderer.floor_transform);
 
-        Matrix floor_transform = MatrixCompose({0, 0, 0}, QuaternionIdentity(), {1, 1, 1});
+        SetShaderValueMatrix(renderer.instancing_shader, renderer.mvp_loc, mvp);
+        SetShaderValue(renderer.instancing_shader, renderer.windTimeLoc, &windTime, SHADER_UNIFORM_FLOAT);
+        rlBindShaderBuffer(renderer.seeds_ssbo, 0);
 
-        rlDisableBackfaceCulling();
-        DrawMesh(terrain_gen.floor, terrain_material, floor_transform);
-        rlEnableBackfaceCulling();
+        BeginShaderMode(renderer.instancing_shader);
 
-        float start_time = GetTime();
-
-        BeginShaderMode(instancing_shader);
-
-        SetShaderValueMatrix(instancing_shader, mvp_loc, mvp);
-        SetShaderValueMatrix(instancing_shader_far, mvp_loc, mvp);
-
-        rlEnableVertexArray(grass_vaoId);
-
-        for (auto& chunk : terrain_gen.chunks)
+        for (auto& chunk : data.chunks)
         {
-            if (!chunk.visible || chunk.current_LOD != 0)
-                continue;
-
-            chunks_visible++;
-            chunks_draw_LOD0++;
-
-            SetShaders(instancing_shader, chunk, mvp, 1, windTime, false);
-
             
-            rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, 800 * 60);
-            
-
-        }
-
-        rlDisableVertexArray();
-
-        EndShaderMode();
-
-        BeginShaderMode(instancing_shader_far);
-
-        for (auto& chunk : terrain_gen.chunks)
-        {
-            if (!chunk.visible || chunk.current_LOD == 0 || chunk.current_LOD == 4)
+            if ((chunk.flags & VISIBLE) == 0)
                 continue;
-
-            chunks_visible++;
 
             Mesh* grass_mesh;
 
@@ -424,34 +343,39 @@ public:
             u_int16_t grass = 0;
             u_int8_t multiplicator = 0;
 
-            switch (chunk.current_LOD) {
+            switch ((chunk.flags & LOD_MASK) >> 1) {
+                case 0:
+                    step = 1;
+                    grass = 800;
+                    multiplicator = 20;
+                    grass_mesh = &renderer.grass_model_near.meshes[0];
+                    break;
                 case 1: 
                     step = 2;
                     grass = 600;
-                    multiplicator = 8;
-                    grass_mesh = &grass_model_far.meshes[0];
-                    chunks_draw_LOD1++;
+                    multiplicator = 13;
+                    grass_mesh = &renderer.grass_model_far.meshes[0];
                     break;
                 case 2:
                     step = 4;
                     grass = 400;
-                    multiplicator = 7;
-                    grass_mesh = &grass_model_very_far.meshes[0];
-                    chunks_draw_LOD2++;
+                    multiplicator = 10;
+                    grass_mesh = &renderer.grass_model_very_far.meshes[0];
                     break;
                 case 3:
                     step = 8;
                     grass = 50;
-                    multiplicator = 6;
-                    grass_mesh = &grass_model_farthest.meshes[0];
-                    chunks_draw_LOD3++;
+                    multiplicator = 5;
+                    grass_mesh = &renderer.grass_model_farthest.meshes[0];
                     break;
             }
+
+            [[assume(grass_mesh != nullptr)]];
 
             unsigned int grass_vaoId = grass_mesh->vaoId;
             unsigned int grass_tri_count = grass_mesh->triangleCount;
 
-            SetShaders(instancing_shader_far, chunk, mvp, step, windTime, true);
+            chunkSetShaders(renderer.instancing_shader, chunk, mvp, 1, windTime);
 
             rlEnableVertexArray(grass_vaoId);
             rlDrawVertexArrayElementsInstanced(0, grass_tri_count * 3, nullptr, grass * multiplicator);
@@ -461,7 +385,6 @@ public:
 
         EndShaderMode();
 
-        gpu_frame_time = GetTime() - start_time;
     }
-};
-
+    
+} Terrain;

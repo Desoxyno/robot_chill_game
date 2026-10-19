@@ -19,25 +19,20 @@ class Robot : public GameObject{
 
         RobotLeg left_leg = RobotLeg(joints, lengths, followDistance);
 
-        uint8_t speed = 5;
-        uint8_t turning_speed = 90.0f; // In Degrees / s
+        const uint8_t speed = 5;
+        const uint8_t turning_speed = 90.0f; // In Degrees / s
 
-        uint8_t distance = 1;
+        const uint8_t distance = 1;
 
-        uint8_t wander_radius = 100;
+        const uint8_t wander_radius = 100;
+
+        const float floor_offset = 0.08;
 
         float angle = 0;
 
-        float floor_offset = 0.08;
-
         Model robot = LoadModel("assets/robots/lil_robot.glb");
 
-        TerrainGeneration terrain_gen;
-
-        Robot(Mesh* floor_mesh, TerrainGeneration &terrain_gen) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh), terrain_gen(terrain_gen) {}
-        ~Robot() {
-            UnloadModel(robot);
-        }
+        Robot(Mesh* floor_mesh) : GameObject(&robot, {2500, 10, 2500}, 0), floor_mesh(floor_mesh) {}
 
         Mesh* floor_mesh;
 
@@ -54,7 +49,7 @@ class Robot : public GameObject{
 
 
         void checkGravity() {
-            position.y = terrain_gen.getHeight(position.x, position.z) + floor_offset;
+            position.y = getHeight(position.x, position.z) + floor_offset;
         }
 
         void Draw() override {

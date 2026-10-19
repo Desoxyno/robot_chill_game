@@ -6,9 +6,14 @@
 
 #include <memory>
 #include <raylib.h>
-#include <string>
 #include <utility>
 #include <vector>
+
+#ifdef DEBUG_BUILD
+    #include <iostream>
+    #include <chrono>
+    #include "utils/performance_mesurer.h"
+#endif
 
 class Scene {
 
@@ -16,7 +21,6 @@ class Scene {
 
         std::vector<std::unique_ptr<GameObject>> scene_objects;
         float cpu_frame_time = 0.0f;
-        
         
     public:
         std::unique_ptr<Terrain> terrain;
@@ -26,10 +30,18 @@ class Scene {
         Scene(std::unique_ptr<Player> player, std::unique_ptr<Terrain> terrain) : player(std::move(player)), terrain(std::move(terrain)) {}
 
         void Tick(Model &skybox) {
-            float f_start = GetTime();
+            #ifdef DEBUG_BUILD
+                const auto start = std::chrono::steady_clock::now();
+            #endif
+
             Update();
-            Draw(skybox, cpu_frame_time, terrain->gpu_frame_time);
-            cpu_frame_time = GetTime() - f_start;
+            Draw(skybox);
+
+            #ifdef DEBUG_BUILD
+                const auto elapsed = std::chrono::steady_clock::now() - start;
+                cpu_frame_time = std::chrono::duration<float>(elapsed).count();
+            #endif
+
         }
 
         void Update() {
@@ -47,7 +59,7 @@ class Scene {
             scene_objects.push_back(std::move(to_add));
         }
 
-        void Draw(Model &skybox, float cpu_frame_time, float gpu_frame_time) {
+        void Draw(Model &skybox) {
             BeginDrawing();
 
             BeginMode3D(player->camera.camera);
@@ -63,23 +75,37 @@ class Scene {
             player->Draw();
             terrain->Draw(player->camera.camera);
 
-            for (auto& object : scene_objects) {
+            for (auto &object : scene_objects) {
                 object->Draw();
             }
 
             EndMode3D();
 
-            DrawText(("Chunks visibles:" + std::to_string(terrain->chunks_visible) + "/" + std::to_string(terrain->terrain_gen.chunks.size())).c_str(), 10, 30, 25, WHITE);
-            DrawText(("LOD0:" + std::to_string(terrain->chunks_draw_LOD0)).c_str(), 10, 55, 25, WHITE);
-            DrawText(("LOD1:" + std::to_string(terrain->chunks_draw_LOD1)).c_str(), 10, 80, 25, WHITE);
-            DrawText(("LOD2:" + std::to_string(terrain->chunks_draw_LOD2)).c_str(), 10, 105, 25, WHITE);
-            DrawText(("LOD3:" + std::to_string(terrain->chunks_draw_LOD3)).c_str(), 10, 130, 25, WHITE);
-            DrawText(("CPU frame time: " + std::to_string(cpu_frame_time * 1000) + "ms").c_str(), 10, 155, 25, WHITE);
-            DrawText(("GPU frame time: " + std::to_string(gpu_frame_time * 1000) + "ms").c_str(), 10, 180, 25, WHITE);
-
             DrawFPS(10, 10);
+
+            #ifdef DEBUG_BUILD
+                std::cout << "CPU Frame Time : " << cpu_frame_time * 1000 << "ms" << std::endl;
+                frame_ms_measures.push_back(cpu_frame_time);
+            #endif
 
             EndDrawing();
                 
         }
+
+        ~Scene() {
+            UnloadModel(*player->model);
+
+            UnloadModel(terrain->renderer.grass_model_near);
+            UnloadModel(terrain->renderer.grass_model_far);
+            UnloadModel(terrain->renderer.grass_model_very_far);
+            UnloadModel(terrain->renderer.grass_model_farthest);
+
+            UnloadMesh(terrain->data.ground);
+
+            for (auto &model : scene_objects) {
+                UnloadModel(*model->model);
+            }
+
+        }
+
 };
